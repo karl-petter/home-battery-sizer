@@ -1,0 +1,13 @@
+{
+  "domain": "home_battery_sizer",
+  "name": "Home Battery Sizer",
+  "codeowners": [
+    "@karl-petter"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/karl-petter/home-battery-sizer",
+  "issue_tracker": "https://github.com/karl-petter/home-battery-sizer/issues",
+  "requirements": [],
+  "version": "0.1.0",
+  "homeassistant": "2024.12.0"
+}

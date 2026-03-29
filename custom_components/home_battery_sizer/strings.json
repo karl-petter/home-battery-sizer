@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Home Battery Sizer",
+        "description": "Enter your solar production, grid import/export sensors, and desired battery size.",
+        "data": {
+          "solar_sensor": "Solar production sensor (cumulative kWh)",
+          "grid_import_sensor": "Grid import sensor (cumulative kWh)",
+          "grid_export_sensor": "Grid export sensor (cumulative kWh)",
+          "battery_size": "Battery capacity (kWh)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "self_sufficient_days": {
+        "name": "Self-sufficient days"
+      },
+      "self_sufficiency_today": {
+        "name": "Self-sufficiency today"
+      }
+    }
+  }
+}
