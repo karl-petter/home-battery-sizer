@@ -3,12 +3,18 @@
     "step": {
       "user": {
         "title": "Configure Home Battery Sizer",
-        "description": "Sensors will be auto-detected from your Energy dashboard if configured. Otherwise, choose cumulative energy sensors in kWh.",
+        "description": "Sensors will be auto-detected from your Energy dashboard if configured. Otherwise, select cumulative energy sensors in kWh.",
         "data": {
           "solar_sensor": "Solar production sensor",
           "grid_import_sensor": "Grid import sensor",
           "grid_export_sensor": "Grid export sensor",
           "battery_size": "Battery capacity (kWh)"
+        },
+        "data_description": {
+          "solar_sensor": "Cumulative kWh sensor for solar production (e.g. from your inverter)",
+          "grid_import_sensor": "Cumulative kWh sensor for energy imported from the grid",
+          "grid_export_sensor": "Cumulative kWh sensor for energy exported to the grid",
+          "battery_size": "The battery size you want to simulate"
         }
       }
     }

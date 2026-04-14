@@ -55,7 +55,7 @@ class HomebatterysizeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     CONF_SOLAR_SENSOR,
                     description={
-                        "suggested_value": suggested_values.get(CONF_SOLAR_SENSOR, "sensor.solar_production"),
+                        "suggested_value": suggested_values.get(CONF_SOLAR_SENSOR),
                         "description": "Select the cumulative solar energy sensor in kWh.",
                     },
                 ): selector.EntitySelector(
@@ -64,7 +64,7 @@ class HomebatterysizeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     CONF_GRID_IMPORT_SENSOR,
                     description={
-                        "suggested_value": suggested_values.get(CONF_GRID_IMPORT_SENSOR, "sensor.grid_import"),
+                        "suggested_value": suggested_values.get(CONF_GRID_IMPORT_SENSOR),
                         "description": "Select the cumulative grid import energy sensor in kWh.",
                     },
                 ): selector.EntitySelector(
@@ -73,7 +73,7 @@ class HomebatterysizeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     CONF_GRID_EXPORT_SENSOR,
                     description={
-                        "suggested_value": suggested_values.get(CONF_GRID_EXPORT_SENSOR, "sensor.grid_export"),
+                        "suggested_value": suggested_values.get(CONF_GRID_EXPORT_SENSOR),
                         "description": "Select the cumulative grid export energy sensor in kWh.",
                     },
                 ): selector.EntitySelector(
@@ -109,31 +109,46 @@ class HomebatterysizeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Try to detect sensors from Energy dashboard configuration."""
         suggested = {}
 
-        # Get energy config entries
-        energy_entries = self.hass.config_entries.async_entries("energy")
-        if not energy_entries:
-            return suggested
+        try:
+            import json
 
-        # Use the first energy config entry
-        energy_config = energy_entries[0].data
+            storage_path = self.hass.config.path(".storage/energy")
 
-        # Extract sensors from energy sources
-        energy_sources = energy_config.get("energy_sources", [])
+            def _read_storage():
+                with open(storage_path) as f:
+                    return json.load(f)
 
-        for source in energy_sources:
-            source_type = source.get("type")
+            storage = await self.hass.async_add_executor_job(_read_storage)
+            sources = storage.get("data", {}).get("energy_sources", [])
+            _LOGGER.debug("Energy sources found: %s", sources)
 
-            if source_type == "solar":
-                # Solar production sensor
-                if "entity_id" in source:
-                    suggested[CONF_SOLAR_SENSOR] = source["entity_id"]
+            for source in sources:
+                source_type = source.get("type")
 
-            elif source_type == "grid":
-                # Grid consumption (import) and production (export) sensors
-                if "entity_id" in source:
-                    suggested[CONF_GRID_IMPORT_SENSOR] = source["entity_id"]
-                if "entity_id_production" in source:
-                    suggested[CONF_GRID_EXPORT_SENSOR] = source["entity_id_production"]
+                if source_type == "solar":
+                    stat = source.get("stat_energy_from")
+                    if stat:
+                        suggested[CONF_SOLAR_SENSOR] = stat
+                        _LOGGER.debug("Auto-detected solar sensor: %s", stat)
+
+                elif source_type == "grid":
+                    stat = source.get("stat_energy_from")
+                    if stat:
+                        suggested[CONF_GRID_IMPORT_SENSOR] = stat
+                        _LOGGER.debug("Auto-detected grid import sensor: %s", stat)
+
+                    stat = source.get("stat_energy_to")
+                    if stat:
+                        suggested[CONF_GRID_EXPORT_SENSOR] = stat
+                        _LOGGER.debug("Auto-detected grid export sensor: %s", stat)
+
+        except Exception:
+            _LOGGER.warning("Could not read Energy dashboard configuration", exc_info=True)
+
+        if not suggested:
+            _LOGGER.warning("No sensors auto-detected from Energy dashboard")
+        else:
+            _LOGGER.info("Auto-detected sensors: %s", suggested)
 
         return suggested
 
