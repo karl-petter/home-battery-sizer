@@ -12,7 +12,7 @@ A custom Home Assistant integration that analyzes one year of historical solar a
 | `sensor.energy_consumed_luxembourg` | Grid import (Slimmelezer) | Cumulative kWh |
 | `sensor.energy_produced_luxembourg` | Grid export (Slimmelezer) | Cumulative kWh |
 
-These are the developer's own sensors. The integration should allow any user to configure their own equivalents via ConfigFlow.
+These are the developer's own sensors. The integration automatically detects sensors from the Home Assistant Energy dashboard configuration when available, otherwise allows manual configuration via ConfigFlow.
 
 ## Core calculation
 
@@ -38,7 +38,7 @@ Battery simulation per day:
 
 ## Integration structure (planned)
 
-- **ConfigFlow** — setup UI where user enters sensor names and battery size
+- **ConfigFlow** — setup UI that auto-detects sensors from Energy dashboard, with manual override option
 - **Coordinator** — queries recorder, runs simulation, caches results
 - **Sensors** — exposes results back to HA as entities
 
