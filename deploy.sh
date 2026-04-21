@@ -1,8 +1,15 @@
 #!/bin/bash
 set -e
 
-USER="${1:-root}"
-HOST_ARG="${2:-kp-home.no-ip.org}"
+# Usage: ./deploy.sh <user> <host>
+# Example: ./deploy.sh hassio homeassistant.local
+if [ -z "$1" ] || [ -z "$2" ]; then
+  echo "Usage: $0 <user> <host>"
+  exit 1
+fi
+
+USER="$1"
+HOST_ARG="$2"
 HOST="$USER@$HOST_ARG"
 REMOTE_DIR="/config/custom_components/home_battery_sizer"
 
