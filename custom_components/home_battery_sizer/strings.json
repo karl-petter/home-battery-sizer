@@ -20,6 +20,12 @@
       },
       "self_sufficiency_today": {
         "name": "Self-sufficiency today"
+      },
+      "first_self_sufficient_day": {
+        "name": "First self-sufficient day"
+      },
+      "last_self_sufficient_day": {
+        "name": "Last self-sufficient day"
       }
     }
   }

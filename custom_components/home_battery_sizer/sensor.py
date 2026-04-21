@@ -32,6 +32,8 @@ async def async_setup_entry(
         [
             SelfSufficientDaysSensor(coordinator, entry),
             SelfSufficiencyTodaySensor(coordinator, entry),
+            FirstSelfSufficientDaySensor(coordinator, entry),
+            LastSelfSufficientDaySensor(coordinator, entry),
         ]
     )
 
@@ -74,6 +76,19 @@ class SelfSufficientDaysSensor(BatterySizerSensorBase, SensorEntity):
             return None
         return self.coordinator.data.get("self_sufficient_days")
 
+    @property
+    def extra_state_attributes(self) -> dict:
+        """Expose diagnostic info for verification."""
+        if self.coordinator.data is None:
+            return {}
+        daily = self.coordinator.data.get("daily_results", [])
+        return {
+            "days_of_data": len(daily),
+            "data_from": daily[0]["date"] if daily else None,
+            "data_to": daily[-1]["date"] if daily else None,
+            "battery_size_kwh": self.coordinator.battery_size,
+        }
+
 
 class SelfSufficiencyTodaySensor(BatterySizerSensorBase, SensorEntity):
     """Sensor for today's self-sufficiency percentage."""
@@ -89,3 +104,41 @@ class SelfSufficiencyTodaySensor(BatterySizerSensorBase, SensorEntity):
         if self.coordinator.data is None:
             return None
         return self.coordinator.data.get("self_sufficiency_today")
+
+
+class FirstSelfSufficientDaySensor(BatterySizerSensorBase, SensorEntity):
+    """Sensor for the first self-sufficient day in the past year."""
+
+    _attr_unique_id = "home_battery_sizer_first_self_sufficient_day"
+    _attr_translation_key = "first_self_sufficient_day"
+    _attr_device_class = SensorDeviceClass.DATE
+
+    @property
+    def native_value(self):
+        """Return the date of the first self-sufficient day."""
+        if self.coordinator.data is None:
+            return None
+        value = self.coordinator.data.get("first_self_sufficient_day")
+        if value is None:
+            return None
+        from datetime import date
+        return date.fromisoformat(value)
+
+
+class LastSelfSufficientDaySensor(BatterySizerSensorBase, SensorEntity):
+    """Sensor for the most recent self-sufficient day in the past year."""
+
+    _attr_unique_id = "home_battery_sizer_last_self_sufficient_day"
+    _attr_translation_key = "last_self_sufficient_day"
+    _attr_device_class = SensorDeviceClass.DATE
+
+    @property
+    def native_value(self):
+        """Return the date of the last self-sufficient day."""
+        if self.coordinator.data is None:
+            return None
+        value = self.coordinator.data.get("last_self_sufficient_day")
+        if value is None:
+            return None
+        from datetime import date
+        return date.fromisoformat(value)

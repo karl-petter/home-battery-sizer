@@ -25,13 +25,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Home Battery Sizer from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
+    # Battery size can be overridden via options after initial setup
+    battery_size = entry.options.get(CONF_BATTERY_SIZE, entry.data[CONF_BATTERY_SIZE])
+
     # Create coordinator
     coordinator = HomeBatterySizerCoordinator(
         hass,
         solar_sensor=entry.data[CONF_SOLAR_SENSOR],
         grid_import_sensor=entry.data[CONF_GRID_IMPORT_SENSOR],
         grid_export_sensor=entry.data[CONF_GRID_EXPORT_SENSOR],
-        battery_size=entry.data[CONF_BATTERY_SIZE],
+        battery_size=battery_size,
     )
 
     # Fetch initial data
@@ -44,7 +47,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
+
     return True
+
+
+async def _async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the integration when options change."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

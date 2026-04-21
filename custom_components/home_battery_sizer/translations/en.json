@@ -1,4 +1,17 @@
 {
+  "options": {
+    "step": {
+      "init": {
+        "title": "Battery Sizer options",
+        "data": {
+          "battery_size": "Battery capacity (kWh)"
+        },
+        "data_description": {
+          "battery_size": "The battery size you want to simulate"
+        }
+      }
+    }
+  },
   "config": {
     "step": {
       "user": {
@@ -26,6 +39,12 @@
       },
       "self_sufficiency_today": {
         "name": "Self-sufficiency today"
+      },
+      "first_self_sufficient_day": {
+        "name": "First self-sufficient day"
+      },
+      "last_self_sufficient_day": {
+        "name": "Last self-sufficient day"
       }
     }
   }

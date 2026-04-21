@@ -2,16 +2,20 @@
 from __future__ import annotations
 
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .recorder import async_get_daily_energy_data
+from .const import DOMAIN
+from .recorder import async_get_hourly_energy_data
 from .simulation import simulate_battery
 
 _LOGGER = logging.getLogger(__name__)
+
+STATISTIC_ID = f"{DOMAIN}:self_sufficiency_daily"
 
 
 class HomeBatterySizerCoordinator(DataUpdateCoordinator):
@@ -40,8 +44,7 @@ class HomeBatterySizerCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from recorder and run simulation."""
         try:
-            # Fetch daily energy data from recorder
-            daily_data = await async_get_daily_energy_data(
+            hourly_data = await async_get_hourly_energy_data(
                 self.hass,
                 self.solar_sensor,
                 self.grid_import_sensor,
@@ -49,10 +52,48 @@ class HomeBatterySizerCoordinator(DataUpdateCoordinator):
                 days=365,
             )
 
-            # Run battery simulation
-            result = simulate_battery(daily_data, self.battery_size)
+            result = simulate_battery(hourly_data, self.battery_size)
+
+            await self._inject_daily_statistics(result["daily_results"])
 
             return result
         except Exception as err:
             _LOGGER.error("Error updating battery sizer data: %s", err)
             raise
+
+    async def _inject_daily_statistics(self, daily_results: list[dict[str, Any]]) -> None:
+        """Inject per-day self-sufficiency as external HA statistics for historical graphing."""
+        if not daily_results:
+            return
+
+        try:
+            from homeassistant.components.recorder.statistics import (
+                async_add_external_statistics,
+                StatisticData,
+                StatisticMetaData,
+            )
+
+            metadata = StatisticMetaData(
+                has_mean=True,
+                has_sum=False,
+                name="Battery sim: daily self-sufficiency",
+                source=DOMAIN,
+                statistic_id=STATISTIC_ID,
+                unit_of_measurement=PERCENTAGE,
+            )
+
+            stat_data = []
+            for day in daily_results:
+                d = datetime.fromisoformat(day["date"])
+                start = datetime(d.year, d.month, d.day, tzinfo=timezone.utc)
+                stat_data.append(
+                    StatisticData(
+                        start=start,
+                        mean=day.get("self_sufficiency_pct", 0.0),
+                    )
+                )
+
+            async_add_external_statistics(self.hass, metadata, stat_data)
+
+        except Exception:
+            _LOGGER.warning("Could not inject daily self-sufficiency statistics", exc_info=True)
