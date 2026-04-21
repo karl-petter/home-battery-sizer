@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
+pytest.importorskip("tests.common", reason="Requires HA test infrastructure (tests.common)")
 from tests.common import MockConfigEntry
 
 from custom_components.home_battery_sizer.const import DOMAIN

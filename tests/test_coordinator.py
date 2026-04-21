@@ -41,7 +41,7 @@ async def test_coordinator_refresh_success(
     )
 
     with patch(
-        "custom_components.home_battery_sizer.recorder.async_get_daily_energy_data",
+        "custom_components.home_battery_sizer.coordinator.async_get_hourly_energy_data",
         new_callable=AsyncMock,
         return_value=sample_daily_data,
     ):
@@ -66,7 +66,7 @@ async def test_coordinator_refresh_with_mock_data(
     )
 
     with patch(
-        "custom_components.home_battery_sizer.recorder.async_get_daily_energy_data",
+        "custom_components.home_battery_sizer.coordinator.async_get_hourly_energy_data",
         new_callable=AsyncMock,
         return_value=sample_daily_data,
     ) as mock_get_data:
@@ -93,7 +93,7 @@ async def test_coordinator_handles_empty_data(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "custom_components.home_battery_sizer.recorder.async_get_daily_energy_data",
+        "custom_components.home_battery_sizer.coordinator.async_get_hourly_energy_data",
         new_callable=AsyncMock,
         return_value=[],
     ):
@@ -117,7 +117,7 @@ async def test_coordinator_error_handling(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "custom_components.home_battery_sizer.recorder.async_get_daily_energy_data",
+        "custom_components.home_battery_sizer.coordinator.async_get_hourly_energy_data",
         new_callable=AsyncMock,
         side_effect=ValueError("Database connection failed"),
     ):
@@ -148,7 +148,7 @@ async def test_coordinator_different_battery_sizes(
     )
 
     with patch(
-        "custom_components.home_battery_sizer.recorder.async_get_daily_energy_data",
+        "custom_components.home_battery_sizer.coordinator.async_get_hourly_energy_data",
         new_callable=AsyncMock,
         return_value=sample_daily_data,
     ):
@@ -171,7 +171,7 @@ async def test_coordinator_data_structure(hass: HomeAssistant, sample_daily_data
     )
 
     with patch(
-        "custom_components.home_battery_sizer.recorder.async_get_daily_energy_data",
+        "custom_components.home_battery_sizer.coordinator.async_get_hourly_energy_data",
         new_callable=AsyncMock,
         return_value=sample_daily_data,
     ):
