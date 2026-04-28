@@ -31,6 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create coordinator
     coordinator = HomeBatterySizerCoordinator(
         hass,
+        entry_id=entry.entry_id,
         solar_sensor=entry.data[CONF_SOLAR_SENSOR],
         grid_import_sensor=entry.data[CONF_GRID_IMPORT_SENSOR],
         grid_export_sensor=entry.data[CONF_GRID_EXPORT_SENSOR],

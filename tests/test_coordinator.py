@@ -1,9 +1,10 @@
 """Tests for data coordinator."""
 from __future__ import annotations
 
+import sys
 import pytest
-from unittest.mock import AsyncMock, patch
-from datetime import timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import datetime, timedelta, timezone
 from homeassistant.core import HomeAssistant
 
 from custom_components.home_battery_sizer.coordinator import HomeBatterySizerCoordinator
@@ -181,3 +182,100 @@ async def test_coordinator_data_structure(hass: HomeAssistant, sample_daily_data
     assert isinstance(data["self_sufficient_days"], int)
     assert isinstance(data["self_sufficiency_today"], float)
     assert isinstance(data["daily_results"], list)
+
+
+def _make_coordinator_with_mock_hass():
+    """Create a coordinator with a minimal mock hass (no real HA needed)."""
+    mock_hass = MagicMock()
+    # HomeBatterySizerCoordinator calls super().__init__ which needs hass.loop etc.
+    with patch("homeassistant.helpers.update_coordinator.DataUpdateCoordinator.__init__", return_value=None):
+        coordinator = HomeBatterySizerCoordinator.__new__(HomeBatterySizerCoordinator)
+        coordinator.hass = mock_hass
+        coordinator.entry_id = "test_entry_id"
+        coordinator.solar_sensor = "sensor.solar"
+        coordinator.grid_import_sensor = "sensor.import"
+        coordinator.grid_export_sensor = "sensor.export"
+        coordinator.battery_size = 10.0
+        coordinator.statistic_id = "home_battery_sizer:self_sufficiency_daily_10kwh"
+    return coordinator
+
+
+def _fake_recorder_module(captured: list):
+    """Return a fake homeassistant.components.recorder.statistics module."""
+    mod = MagicMock()
+    mod.StatisticData = lambda **kwargs: kwargs
+    mod.StatisticMetaData = MagicMock(return_value=MagicMock())
+    mod.async_add_external_statistics = lambda hass, meta, data: captured.extend(data)
+    return mod
+
+
+@pytest.mark.asyncio
+async def test_inject_statistics_fills_date_gaps() -> None:
+    """Gap dates between first and last should be written with mean=0.0."""
+    coordinator = _make_coordinator_with_mock_hass()
+    daily_results = [
+        {"date": "2024-06-01", "self_sufficiency_pct": 80.0},
+        {"date": "2024-06-03", "self_sufficiency_pct": 60.0},
+    ]
+    captured = []
+    fake_mod = _fake_recorder_module(captured)
+
+    with patch.dict(sys.modules, {"homeassistant.components.recorder.statistics": fake_mod}):
+        await coordinator._inject_daily_statistics(daily_results)
+
+    assert len(captured) == 3
+    dates = [s["start"] for s in captured]
+    assert dates[0] == datetime(2024, 6, 1, tzinfo=timezone.utc)
+    assert dates[1] == datetime(2024, 6, 2, tzinfo=timezone.utc)
+    assert dates[2] == datetime(2024, 6, 3, tzinfo=timezone.utc)
+    assert captured[1]["mean"] == 0.0  # gap day filled with 0%
+
+
+@pytest.mark.asyncio
+async def test_inject_statistics_uses_correct_pct_values() -> None:
+    """Days present in daily_results should carry their actual self_sufficiency_pct."""
+    coordinator = _make_coordinator_with_mock_hass()
+    daily_results = [
+        {"date": "2024-06-01", "self_sufficiency_pct": 80.0},
+        {"date": "2024-06-02", "self_sufficiency_pct": 50.0},
+        {"date": "2024-06-03", "self_sufficiency_pct": 60.0},
+    ]
+    captured = []
+    fake_mod = _fake_recorder_module(captured)
+
+    with patch.dict(sys.modules, {"homeassistant.components.recorder.statistics": fake_mod}):
+        await coordinator._inject_daily_statistics(daily_results)
+
+    assert len(captured) == 3
+    assert captured[0]["mean"] == 80.0
+    assert captured[1]["mean"] == 50.0
+    assert captured[2]["mean"] == 60.0
+
+
+@pytest.mark.asyncio
+async def test_inject_statistics_skips_empty_input() -> None:
+    """Empty daily_results should not call async_add_external_statistics at all."""
+    coordinator = _make_coordinator_with_mock_hass()
+    captured = []
+    fake_mod = _fake_recorder_module(captured)
+
+    with patch.dict(sys.modules, {"homeassistant.components.recorder.statistics": fake_mod}):
+        await coordinator._inject_daily_statistics([])
+
+    assert captured == []
+
+
+@pytest.mark.asyncio
+async def test_inject_statistics_single_day() -> None:
+    """Single-day input produces exactly one stat entry."""
+    coordinator = _make_coordinator_with_mock_hass()
+    daily_results = [{"date": "2024-06-15", "self_sufficiency_pct": 75.0}]
+    captured = []
+    fake_mod = _fake_recorder_module(captured)
+
+    with patch.dict(sys.modules, {"homeassistant.components.recorder.statistics": fake_mod}):
+        await coordinator._inject_daily_statistics(daily_results)
+
+    assert len(captured) == 1
+    assert captured[0]["mean"] == 75.0
+    assert captured[0]["start"] == datetime(2024, 6, 15, tzinfo=timezone.utc)

@@ -1,0 +1,1 @@
+- check that the battery can charge and discharge according to history

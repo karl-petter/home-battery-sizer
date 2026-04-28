@@ -109,10 +109,22 @@ def simulate_battery(
     # Today's self-sufficiency = last entry (current day, partial)
     self_sufficiency_today = daily_results[-1]["self_sufficiency_pct"] if daily_results else 0.0
 
+    # Longest consecutive streak of self-sufficient days
+    max_consecutive_days = 0
+    current_streak = 0
+    for day in daily_results:
+        if day["self_sufficient"]:
+            current_streak += 1
+            if current_streak > max_consecutive_days:
+                max_consecutive_days = current_streak
+        else:
+            current_streak = 0
+
     return {
         "self_sufficient_days": self_sufficient_days,
         "self_sufficiency_today": self_sufficiency_today,
         "first_self_sufficient_day": first_self_sufficient_day,
         "last_self_sufficient_day": last_self_sufficient_day,
+        "max_consecutive_days": max_consecutive_days,
         "daily_results": daily_results,
     }

@@ -34,6 +34,7 @@ async def async_setup_entry(
             SelfSufficiencyTodaySensor(coordinator, entry),
             FirstSelfSufficientDaySensor(coordinator, entry),
             LastSelfSufficientDaySensor(coordinator, entry),
+            MaxConsecutiveSelfSufficientDaysSensor(coordinator, entry),
         ]
     )
 
@@ -54,9 +55,10 @@ class BatterySizerSensorBase(CoordinatorEntity):
     @property
     def device_info(self) -> dict[str, Any]:
         """Return device info."""
+        size = self.coordinator.battery_size
         return {
             "identifiers": {(DOMAIN, self.entry.entry_id)},
-            "name": "Home Battery Sizer",
+            "name": f"Home Battery Sizer {size:.0f} kWh",
             "manufacturer": "Home Assistant",
         }
 
@@ -64,8 +66,11 @@ class BatterySizerSensorBase(CoordinatorEntity):
 class SelfSufficientDaysSensor(BatterySizerSensorBase, SensorEntity):
     """Sensor for count of self-sufficient days."""
 
-    _attr_unique_id = "home_battery_sizer_self_sufficient_days"
     _attr_translation_key = "self_sufficient_days"
+
+    def __init__(self, coordinator, entry):
+        super().__init__(coordinator, entry)
+        self._attr_unique_id = f"home_battery_sizer_self_sufficient_days_{entry.entry_id}"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = "days"
 
@@ -93,8 +98,11 @@ class SelfSufficientDaysSensor(BatterySizerSensorBase, SensorEntity):
 class SelfSufficiencyTodaySensor(BatterySizerSensorBase, SensorEntity):
     """Sensor for today's self-sufficiency percentage."""
 
-    _attr_unique_id = "home_battery_sizer_self_sufficiency_today"
     _attr_translation_key = "self_sufficiency_today"
+
+    def __init__(self, coordinator, entry):
+        super().__init__(coordinator, entry)
+        self._attr_unique_id = f"home_battery_sizer_self_sufficiency_today_{entry.entry_id}"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = PERCENTAGE
 
@@ -109,8 +117,11 @@ class SelfSufficiencyTodaySensor(BatterySizerSensorBase, SensorEntity):
 class FirstSelfSufficientDaySensor(BatterySizerSensorBase, SensorEntity):
     """Sensor for the first self-sufficient day in the past year."""
 
-    _attr_unique_id = "home_battery_sizer_first_self_sufficient_day"
     _attr_translation_key = "first_self_sufficient_day"
+
+    def __init__(self, coordinator, entry):
+        super().__init__(coordinator, entry)
+        self._attr_unique_id = f"home_battery_sizer_first_self_sufficient_day_{entry.entry_id}"
     _attr_device_class = SensorDeviceClass.DATE
 
     @property
@@ -128,8 +139,11 @@ class FirstSelfSufficientDaySensor(BatterySizerSensorBase, SensorEntity):
 class LastSelfSufficientDaySensor(BatterySizerSensorBase, SensorEntity):
     """Sensor for the most recent self-sufficient day in the past year."""
 
-    _attr_unique_id = "home_battery_sizer_last_self_sufficient_day"
     _attr_translation_key = "last_self_sufficient_day"
+
+    def __init__(self, coordinator, entry):
+        super().__init__(coordinator, entry)
+        self._attr_unique_id = f"home_battery_sizer_last_self_sufficient_day_{entry.entry_id}"
     _attr_device_class = SensorDeviceClass.DATE
 
     @property
@@ -142,3 +156,21 @@ class LastSelfSufficientDaySensor(BatterySizerSensorBase, SensorEntity):
             return None
         from datetime import date
         return date.fromisoformat(value)
+
+
+class MaxConsecutiveSelfSufficientDaysSensor(BatterySizerSensorBase, SensorEntity):
+    """Sensor for the longest consecutive streak of self-sufficient days."""
+
+    _attr_translation_key = "max_consecutive_days"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = "days"
+
+    def __init__(self, coordinator, entry):
+        super().__init__(coordinator, entry)
+        self._attr_unique_id = f"home_battery_sizer_max_consecutive_days_{entry.entry_id}"
+
+    @property
+    def native_value(self) -> int | None:
+        if self.coordinator.data is None:
+            return None
+        return self.coordinator.data.get("max_consecutive_days")

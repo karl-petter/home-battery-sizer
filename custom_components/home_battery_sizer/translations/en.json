@@ -45,6 +45,9 @@
       },
       "last_self_sufficient_day": {
         "name": "Last self-sufficient day"
+      },
+      "max_consecutive_days": {
+        "name": "Max consecutive self-sufficient days"
       }
     }
   }
