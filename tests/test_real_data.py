@@ -1,15 +1,19 @@
 """Simulation tests against real HA recorder data.
 
 The CSV in tests/test-data/ was exported directly from the live HA SQLite DB
-on 2026-04-29. It covers 5 days of hourly data for three sensors:
-  - solar  (Wh, already converted to kWh deltas in the CSV)
+on 2026-04-29. It covers 9 calendar dates (2026-04-21 07:00 → 2026-04-29 19:00)
+for three sensors:
+  - solar  (Wh cumulative, converted to kWh deltas in the CSV)
   - import (kWh deltas)
   - export (kWh deltas)
+
+The dataset starts at 07:00 on April 21 so the battery starts charging from the
+first hour rather than cold-starting in the middle of the night.
 
 Night hours have no solar entry from the inverter; the CSV shows an empty
 solar_kwh_delta for those rows. We treat those as 0 (fixed in recorder.py).
 
-Ground-truth daily totals for April 28 (the last complete sunny day) are
+Ground-truth daily totals for April 28 (the sunniest complete day) are
 computed here directly from the CSV so assertions don't rely on the simulation
 being correct — they rely only on arithmetic.
 """
@@ -23,7 +27,7 @@ import pytest
 
 from custom_components.home_battery_sizer.simulation import simulate_battery
 
-CSV_PATH = Path(__file__).parent / "test-data" / "ha_hourly_deltas_5days.csv"
+CSV_PATH = Path(__file__).parent / "test-data" / "ha_hourly_deltas_8days.csv"
 
 
 def load_hourly_data() -> list[dict]:
@@ -72,9 +76,9 @@ def day_totals(hourly_data):
 # Ground-truth sanity checks on the raw data (no simulation)
 # ---------------------------------------------------------------------------
 
-def test_csv_covers_six_dates(day_totals):
-    # The export covers 2026-04-24 (2 night hours) through 2026-04-29 (partial day)
-    assert len(day_totals) == 6
+def test_csv_covers_nine_dates(day_totals):
+    # April 21 (partial from 07:00) through April 29 (partial to 19:00)
+    assert len(day_totals) == 9
 
 
 def test_april28_was_sunny(day_totals):
@@ -164,7 +168,7 @@ def test_20kwh_meaningfully_better_than_1kwh_april28(hourly_data):
     """20 kWh battery should show noticeably higher self-sufficiency on April 28 than 1 kWh.
 
     April 28 was a very sunny day with >30 kWh solar; a larger battery captures
-    more of the daytime surplus for overnight use. The 5-day dataset has no fully
+    more of the daytime surplus for overnight use. The 8-day dataset has no fully
     self-sufficient day even at 20 kWh (night imports exceed battery capacity),
     so we compare the percentage for the best day rather than self_sufficient_days count.
     """
