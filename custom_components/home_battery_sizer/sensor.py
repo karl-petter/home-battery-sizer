@@ -31,7 +31,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             SelfSufficientDaysSensor(coordinator, entry),
-            SelfSufficiencyTodaySensor(coordinator, entry),
+            SelfSufficiencyYesterdaySensor(coordinator, entry),
             FirstSelfSufficientDaySensor(coordinator, entry),
             LastSelfSufficientDaySensor(coordinator, entry),
             MaxConsecutiveSelfSufficientDaysSensor(coordinator, entry),
@@ -95,23 +95,28 @@ class SelfSufficientDaysSensor(BatterySizerSensorBase, SensorEntity):
         }
 
 
-class SelfSufficiencyTodaySensor(BatterySizerSensorBase, SensorEntity):
-    """Sensor for today's self-sufficiency percentage."""
+class SelfSufficiencyYesterdaySensor(BatterySizerSensorBase, SensorEntity):
+    """Sensor for yesterday's (last complete day's) simulated self-sufficiency."""
 
-    _attr_translation_key = "self_sufficiency_today"
-
-    def __init__(self, coordinator, entry):
-        super().__init__(coordinator, entry)
-        self._attr_unique_id = f"home_battery_sizer_self_sufficiency_today_{entry.entry_id}"
+    _attr_translation_key = "self_sufficiency_yesterday"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = PERCENTAGE
 
+    def __init__(self, coordinator, entry):
+        super().__init__(coordinator, entry)
+        self._attr_unique_id = f"home_battery_sizer_self_sufficiency_yesterday_{entry.entry_id}"
+
     @property
     def native_value(self) -> float | None:
-        """Return the value of the sensor."""
         if self.coordinator.data is None:
             return None
-        return self.coordinator.data.get("self_sufficiency_today")
+        return self.coordinator.data.get("self_sufficiency_yesterday")
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        if self.coordinator.data is None:
+            return {}
+        return {"date": self.coordinator.data.get("self_sufficiency_yesterday_date")}
 
 
 class FirstSelfSufficientDaySensor(BatterySizerSensorBase, SensorEntity):

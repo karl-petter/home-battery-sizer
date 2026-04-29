@@ -36,9 +36,11 @@ def simulate_battery(
         _LOGGER.warning("No hourly data available for simulation")
         return {
             "self_sufficient_days": 0,
-            "self_sufficiency_today": 0.0,
+            "self_sufficiency_yesterday": 0.0,
+            "self_sufficiency_yesterday_date": None,
             "first_self_sufficient_day": None,
             "last_self_sufficient_day": None,
+            "max_consecutive_days": 0,
             "daily_results": [],
         }
 
@@ -106,8 +108,19 @@ def simulate_battery(
             "self_sufficiency_pct": ss_pct,
         })
 
-    # Today's self-sufficiency = last entry (current day, partial)
-    self_sufficiency_today = daily_results[-1]["self_sufficiency_pct"] if daily_results else 0.0
+    # Last complete day's self-sufficiency.
+    # The final entry in daily_results is always a partial day (the current calendar
+    # day in long-term statistics). Use the second-to-last entry so we always report
+    # a full 24-hour day. Fall back to the last entry if there's only one day.
+    if len(daily_results) >= 2:
+        last_complete = daily_results[-2]
+    elif daily_results:
+        last_complete = daily_results[-1]
+    else:
+        last_complete = None
+
+    self_sufficiency_yesterday = last_complete["self_sufficiency_pct"] if last_complete else 0.0
+    self_sufficiency_yesterday_date = last_complete["date"] if last_complete else None
 
     # Longest consecutive streak of self-sufficient days
     max_consecutive_days = 0
@@ -122,7 +135,8 @@ def simulate_battery(
 
     return {
         "self_sufficient_days": self_sufficient_days,
-        "self_sufficiency_today": self_sufficiency_today,
+        "self_sufficiency_yesterday": self_sufficiency_yesterday,
+        "self_sufficiency_yesterday_date": self_sufficiency_yesterday_date,
         "first_self_sufficient_day": first_self_sufficient_day,
         "last_self_sufficient_day": last_self_sufficient_day,
         "max_consecutive_days": max_consecutive_days,

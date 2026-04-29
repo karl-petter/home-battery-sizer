@@ -260,7 +260,7 @@ class TestEdgeCases:
         result = simulate_battery([], battery_size=10.0)
 
         assert result["self_sufficient_days"] == 0
-        assert result["self_sufficiency_today"] == 0.0
+        assert result["self_sufficiency_yesterday"] == 0.0
         assert result["first_self_sufficient_day"] is None
         assert result["last_self_sufficient_day"] is None
         assert result["daily_results"] == []
@@ -484,13 +484,17 @@ class TestFirstLastSelfSufficientDay:
         assert result["last_self_sufficient_day"] == "2024-06-04"
         assert result["self_sufficient_days"] == 2
 
-    def test_self_sufficiency_today_reflects_last_day(self) -> None:
-        """self_sufficiency_today must equal the last daily_results entry's pct."""
+    def test_self_sufficiency_yesterday_reflects_last_complete_day(self) -> None:
+        """self_sufficiency_yesterday uses the second-to-last day (last complete day).
+        The final entry is always a partial day so we skip it."""
         data = [
             self._solar_day("2024-06-01"),
             self._grid_day("2024-06-02"),
+            self._solar_day("2024-06-03"),  # partial "today" — should be skipped
         ]
         result = simulate_battery(data, battery_size=0.0)
 
-        last_pct = result["daily_results"][-1]["self_sufficiency_pct"]
-        assert result["self_sufficiency_today"] == pytest.approx(last_pct)
+        # Second-to-last entry is the last complete day (2024-06-02, a grid day)
+        second_to_last_pct = result["daily_results"][-2]["self_sufficiency_pct"]
+        assert result["self_sufficiency_yesterday"] == pytest.approx(second_to_last_pct)
+        assert result["self_sufficiency_yesterday_date"] == "2024-06-02"

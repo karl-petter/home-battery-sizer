@@ -50,7 +50,7 @@ async def test_coordinator_refresh_success(
 
     assert coordinator.data is not None
     assert "self_sufficient_days" in coordinator.data
-    assert "self_sufficiency_today" in coordinator.data
+    assert "self_sufficiency_yesterday" in coordinator.data
 
 
 @pytest.mark.asyncio
@@ -103,7 +103,7 @@ async def test_coordinator_handles_empty_data(hass: HomeAssistant) -> None:
     # Should still have valid result structure
     assert coordinator.data is not None
     assert coordinator.data["self_sufficient_days"] == 0
-    assert coordinator.data["self_sufficiency_today"] == 0.0
+    assert coordinator.data["self_sufficiency_yesterday"] == 0.0
 
 
 @pytest.mark.asyncio
@@ -180,7 +180,7 @@ async def test_coordinator_data_structure(hass: HomeAssistant, sample_daily_data
 
     data = coordinator.data
     assert isinstance(data["self_sufficient_days"], int)
-    assert isinstance(data["self_sufficiency_today"], float)
+    assert isinstance(data["self_sufficiency_yesterday"], float)
     assert isinstance(data["daily_results"], list)
 
 

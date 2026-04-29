@@ -30,11 +30,11 @@ class TestSimulation:
         result = simulate_battery(daily_data, battery_size=10.0)
 
         assert "self_sufficient_days" in result
-        assert "self_sufficiency_today" in result
+        assert "self_sufficiency_yesterday" in result
         assert "daily_results" in result
         assert isinstance(result["self_sufficient_days"], int)
-        assert isinstance(result["self_sufficiency_today"], float)
-        assert 0 <= result["self_sufficiency_today"] <= 100
+        assert isinstance(result["self_sufficiency_yesterday"], float)
+        assert 0 <= result["self_sufficiency_yesterday"] <= 100
 
     def test_simulation_all_self_sufficient(self) -> None:
         """Test days with 100% self-sufficiency."""
@@ -107,7 +107,7 @@ class TestSimulation:
         result = simulate_battery([], battery_size=10.0)
 
         assert result["self_sufficient_days"] == 0
-        assert result["self_sufficiency_today"] == 0.0
+        assert result["self_sufficiency_yesterday"] == 0.0
         assert result["daily_results"] == []
 
     @pytest.mark.parametrize(
@@ -126,11 +126,11 @@ class TestSimulation:
         assert result_5["self_sufficient_days"] <= result_10["self_sufficient_days"]
         assert result_10["self_sufficient_days"] <= result_20["self_sufficient_days"]
 
-    def test_simulation_self_sufficiency_today(self, sample_daily_data) -> None:
+    def test_simulation_self_sufficiency_yesterday(self, sample_daily_data) -> None:
         """Test self-sufficiency percentage for today (last day)."""
         result = simulate_battery(sample_daily_data, battery_size=10.0)
 
-        today_sufficiency = result["self_sufficiency_today"]
+        today_sufficiency = result["self_sufficiency_yesterday"]
         assert isinstance(today_sufficiency, float)
         assert 0 <= today_sufficiency <= 100
 
@@ -167,7 +167,7 @@ class TestSimulation:
         result = simulate_battery(daily_data, battery_size=10.0)
 
         assert result["self_sufficient_days"] >= 0
-        assert result["self_sufficiency_today"] == pytest.approx(100.0)
+        assert result["self_sufficiency_yesterday"] == pytest.approx(100.0)
 
     def test_simulation_high_consumption(self) -> None:
         """Test with high consumption exceeding solar production."""
@@ -191,8 +191,8 @@ class TestSimulation:
         result = simulate_battery(sample_daily_data, battery_size=10.0)
 
         # Check that sufficiency is rounded to 1 decimal
-        assert result["self_sufficiency_today"] == round(
-            result["self_sufficiency_today"], 1
+        assert result["self_sufficiency_yesterday"] == round(
+            result["self_sufficiency_yesterday"], 1
         )
 
         # Check daily results are rounded to 3 decimals

@@ -37,8 +37,8 @@
       "self_sufficient_days": {
         "name": "Self-sufficient days"
       },
-      "self_sufficiency_today": {
-        "name": "Self-sufficiency today"
+      "self_sufficiency_yesterday": {
+        "name": "Self-sufficiency yesterday"
       },
       "first_self_sufficient_day": {
         "name": "First self-sufficient day"
