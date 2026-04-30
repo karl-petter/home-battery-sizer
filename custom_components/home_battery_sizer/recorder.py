@@ -31,17 +31,14 @@ async def async_get_hourly_energy_data(
     - grid_export: float (kWh this hour)
     """
     from homeassistant.components.recorder import get_instance
-    from homeassistant.components.recorder.statistics import (
-        statistics_during_period,
-        list_statistic_ids,
-    )
+    from homeassistant.components.recorder.statistics import statistics_during_period
 
     start_time = datetime.now(timezone.utc) - timedelta(days=days + 1)
     end_time = datetime.now(timezone.utc)
     statistic_ids = {solar_sensor, grid_import_sensor, grid_export_sensor}
 
     def _fetch():
-        stats = statistics_during_period(
+        return statistics_during_period(
             hass,
             start_time,
             end_time,
@@ -50,22 +47,15 @@ async def async_get_hourly_energy_data(
             None,
             {"sum"},
         )
-        # Fetch units so we can normalise Wh → kWh if needed
-        meta = list_statistic_ids(hass, statistic_ids=statistic_ids)
-        units = {m["statistic_id"]: m.get("unit_of_measurement", "kWh") for m in meta}
-        return stats, units
 
     instance = get_instance(hass)
-    stats, units = await instance.async_add_executor_job(_fetch)
-
-    solar_unit = units.get(solar_sensor, "kWh")
+    stats = await instance.async_add_executor_job(_fetch)
 
     return _process_statistics(
         stats,
         solar_sensor,
         grid_import_sensor,
         grid_export_sensor,
-        solar_wh=(solar_unit == "Wh"),
     )
 
 
@@ -81,6 +71,12 @@ def _process_statistics(
     Grid import and export sensors are used as the authoritative hour set because
     they record every hour (including at night). Solar is filled with 0 for hours
     where the inverter pushes no statistics (typically overnight).
+
+    The solar unit (Wh vs kWh) is detected from the magnitude of the cumulative
+    values: a home with >100 000 kWh of lifetime solar production is unrealistic,
+    so any cumulative above that threshold is treated as Wh and divided by 1000.
+    This avoids relying on list_statistic_ids, which is unreliable from an
+    executor thread across HA versions.
     """
 
     def _to_hour_sum(stat_list: list) -> dict[datetime, float]:
@@ -117,8 +113,13 @@ def _process_statistics(
         _LOGGER.warning("No long-term statistics found for solar sensor.")
         return []
 
-    if solar_wh:
-        _LOGGER.info("Solar sensor unit is Wh — converting to kWh")
+    # Detect Wh vs kWh from cumulative magnitude — no extra DB query needed.
+    # A home solar system with >100 000 kWh lifetime production is unrealistic,
+    # so any cumulative above that is almost certainly in Wh.
+    if not solar_wh:
+        solar_wh = max(solar_by_hour.values()) > 100_000
+
+    _LOGGER.info("Solar sensor unit detected as %s", "Wh" if solar_wh else "kWh")
 
     # Use import+export as the authoritative hour set (they record every hour).
     # Solar is missing at night; fill those hours with 0 using the last known
