@@ -74,6 +74,8 @@ stat_types:
   - mean
 unit: "%"
 entities:
+  - entity: home_battery_sizer:self_sufficiency_daily_5kwh
+    name: 5 kWh
   - entity: home_battery_sizer:self_sufficiency_daily_10kwh
     name: 10 kWh
   - entity: home_battery_sizer:self_sufficiency_daily_15kwh
@@ -103,6 +105,8 @@ stat_types:
   - mean
 unit: "%"
 entities:
+  - entity: sensor.home_battery_sizer_5_kwh_self_sufficient_of_solar_season
+    name: 5 kWh
   - entity: sensor.home_battery_sizer_10_kwh_self_sufficient_of_solar_season
     name: 10 kWh
   - entity: sensor.home_battery_sizer_15_kwh_self_sufficient_of_solar_season
@@ -121,6 +125,7 @@ This shows one bar per battery size so you can immediately see the diminishing r
 type: entities
 title: Self-sufficient % of solar season
 entities:
+  - entity: sensor.home_battery_sizer_5_kwh_self_sufficient_of_solar_season
   - entity: sensor.home_battery_sizer_10_kwh_self_sufficient_of_solar_season
   - entity: sensor.home_battery_sizer_15_kwh_self_sufficient_of_solar_season
   - entity: sensor.home_battery_sizer_20_kwh_self_sufficient_of_solar_season
