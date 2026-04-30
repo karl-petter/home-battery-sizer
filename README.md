@@ -74,14 +74,16 @@ stat_types:
   - mean
 unit: "%"
 entities:
-  - entity: home_battery_sizer:self_sufficiency_daily_5kwh
-    name: 5 kWh
   - entity: home_battery_sizer:self_sufficiency_daily_10kwh
     name: 10 kWh
   - entity: home_battery_sizer:self_sufficiency_daily_15kwh
     name: 15 kWh
   - entity: home_battery_sizer:self_sufficiency_daily_20kwh
     name: 20 kWh
+  - entity: home_battery_sizer:self_sufficiency_daily_25kwh
+    name: 25 kWh
+  - entity: home_battery_sizer:self_sufficiency_daily_30kwh
+    name: 30 kWh
 ```
 
 Adjust the list to match the battery sizes you have configured. The statistic ID format is always `home_battery_sizer:self_sufficiency_daily_{size}kwh` (e.g. `_7_5kwh` for 7.5 kWh).
@@ -101,16 +103,16 @@ stat_types:
   - mean
 unit: "%"
 entities:
-  - entity: sensor.home_battery_sizer_1_kwh_self_sufficient_of_solar_season
-    name: 1 kWh
-  - entity: sensor.home_battery_sizer_5_kwh_self_sufficient_of_solar_season
-    name: 5 kWh
   - entity: sensor.home_battery_sizer_10_kwh_self_sufficient_of_solar_season
     name: 10 kWh
   - entity: sensor.home_battery_sizer_15_kwh_self_sufficient_of_solar_season
     name: 15 kWh
   - entity: sensor.home_battery_sizer_20_kwh_self_sufficient_of_solar_season
     name: 20 kWh
+  - entity: sensor.home_battery_sizer_25_kwh_self_sufficient_of_solar_season
+    name: 25 kWh
+  - entity: sensor.home_battery_sizer_30_kwh_self_sufficient_of_solar_season
+    name: 30 kWh
 ```
 
 This shows one bar per battery size so you can immediately see the diminishing returns as capacity grows. A simple list view of the current values also works:
@@ -119,11 +121,11 @@ This shows one bar per battery size so you can immediately see the diminishing r
 type: entities
 title: Self-sufficient % of solar season
 entities:
-  - entity: sensor.home_battery_sizer_1_kwh_self_sufficient_of_solar_season
-  - entity: sensor.home_battery_sizer_5_kwh_self_sufficient_of_solar_season
   - entity: sensor.home_battery_sizer_10_kwh_self_sufficient_of_solar_season
   - entity: sensor.home_battery_sizer_15_kwh_self_sufficient_of_solar_season
   - entity: sensor.home_battery_sizer_20_kwh_self_sufficient_of_solar_season
+  - entity: sensor.home_battery_sizer_25_kwh_self_sufficient_of_solar_season
+  - entity: sensor.home_battery_sizer_30_kwh_self_sufficient_of_solar_season
 ```
 
 ## How it works
