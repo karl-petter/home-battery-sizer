@@ -35,6 +35,10 @@ async def async_setup_entry(
             FirstSelfSufficientDaySensor(coordinator, entry),
             LastSelfSufficientDaySensor(coordinator, entry),
             MaxConsecutiveSelfSufficientDaysSensor(coordinator, entry),
+            SolarSeasonSpanSensor(coordinator, entry),
+            SelfSufficientPctInSpanSensor(coordinator, entry),
+            BatteryKwhDeliveredSensor(coordinator, entry),
+            GridExportKwhSensor(coordinator, entry),
         ]
     )
 
@@ -179,3 +183,95 @@ class MaxConsecutiveSelfSufficientDaysSensor(BatterySizerSensorBase, SensorEntit
         if self.coordinator.data is None:
             return None
         return self.coordinator.data.get("max_consecutive_days")
+
+
+class SolarSeasonSpanSensor(BatterySizerSensorBase, SensorEntity):
+    """Calendar days between first and last self-sufficient day."""
+
+    _attr_translation_key = "solar_season_span"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = "days"
+
+    def __init__(self, coordinator, entry):
+        super().__init__(coordinator, entry)
+        self._attr_unique_id = f"home_battery_sizer_solar_season_span_{entry.entry_id}"
+
+    @property
+    def native_value(self) -> int | None:
+        if self.coordinator.data is None:
+            return None
+        return self.coordinator.data.get("span_days")
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        if self.coordinator.data is None:
+            return {}
+        return {
+            "first_day": self.coordinator.data.get("first_self_sufficient_day"),
+            "last_day": self.coordinator.data.get("last_self_sufficient_day"),
+        }
+
+
+class SelfSufficientPctInSpanSensor(BatterySizerSensorBase, SensorEntity):
+    """Percentage of solar-season days that were self-sufficient."""
+
+    _attr_translation_key = "self_sufficient_pct_in_span"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = PERCENTAGE
+
+    def __init__(self, coordinator, entry):
+        super().__init__(coordinator, entry)
+        self._attr_unique_id = f"home_battery_sizer_self_sufficient_pct_in_span_{entry.entry_id}"
+
+    @property
+    def native_value(self) -> float | None:
+        if self.coordinator.data is None:
+            return None
+        return self.coordinator.data.get("self_sufficient_pct_in_span")
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        if self.coordinator.data is None:
+            return {}
+        return {
+            "self_sufficient_days": self.coordinator.data.get("self_sufficient_days"),
+            "span_days": self.coordinator.data.get("span_days"),
+        }
+
+
+class BatteryKwhDeliveredSensor(BatterySizerSensorBase, SensorEntity):
+    """kWh the battery discharged into the house during the solar season."""
+
+    _attr_translation_key = "battery_kwh_delivered"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+
+    def __init__(self, coordinator, entry):
+        super().__init__(coordinator, entry)
+        self._attr_unique_id = f"home_battery_sizer_battery_kwh_delivered_{entry.entry_id}"
+
+    @property
+    def native_value(self) -> float | None:
+        if self.coordinator.data is None:
+            return None
+        return self.coordinator.data.get("battery_kwh_delivered")
+
+
+class GridExportKwhSensor(BatterySizerSensorBase, SensorEntity):
+    """kWh exported to the grid during the solar season (surplus the battery couldn't store)."""
+
+    _attr_translation_key = "grid_export_kwh"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+
+    def __init__(self, coordinator, entry):
+        super().__init__(coordinator, entry)
+        self._attr_unique_id = f"home_battery_sizer_grid_export_kwh_{entry.entry_id}"
+
+    @property
+    def native_value(self) -> float | None:
+        if self.coordinator.data is None:
+            return None
+        return self.coordinator.data.get("grid_export_kwh")

@@ -48,6 +48,18 @@
       },
       "max_consecutive_days": {
         "name": "Max consecutive self-sufficient days"
+      },
+      "solar_season_span": {
+        "name": "Solar season length"
+      },
+      "self_sufficient_pct_in_span": {
+        "name": "Self-sufficient % of solar season"
+      },
+      "battery_kwh_delivered": {
+        "name": "Battery energy delivered (solar season)"
+      },
+      "grid_export_kwh": {
+        "name": "Grid export during solar season"
       }
     }
   }

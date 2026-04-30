@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
+from datetime import date as date_type
 from typing import Any
 
 from .const import BATTERY_EFFICIENCY
@@ -41,6 +42,10 @@ def simulate_battery(
             "first_self_sufficient_day": None,
             "last_self_sufficient_day": None,
             "max_consecutive_days": 0,
+            "span_days": 0,
+            "self_sufficient_pct_in_span": 0.0,
+            "battery_kwh_delivered": 0.0,
+            "grid_export_kwh": 0.0,
             "daily_results": [],
         }
 
@@ -50,6 +55,8 @@ def simulate_battery(
     daily_grid_needed: dict[str, float] = defaultdict(float)
     daily_solar: dict[str, float] = defaultdict(float)
     daily_consumption: dict[str, float] = defaultdict(float)
+    daily_battery_delivered: dict[str, float] = defaultdict(float)
+    daily_grid_export: dict[str, float] = defaultdict(float)
 
     for hour in hourly_data:
         date = hour["date"]
@@ -66,6 +73,7 @@ def simulate_battery(
             surplus = solar - consumption
             battery_charge = min(battery_charge + surplus * BATTERY_EFFICIENCY, battery_size)
             grid_needed = 0.0
+            discharge = 0.0
         else:
             deficit = consumption - solar
             discharge = min(deficit, battery_charge)
@@ -75,6 +83,8 @@ def simulate_battery(
         daily_grid_needed[date] += grid_needed
         daily_solar[date] += solar
         daily_consumption[date] += consumption
+        daily_battery_delivered[date] += discharge
+        daily_grid_export[date] += grid_export_hist
 
     # Build daily results
     self_sufficient_days = 0
@@ -104,6 +114,8 @@ def simulate_battery(
             "solar_production": round(daily_solar[date], 3),
             "total_consumption": round(consumption, 3),
             "grid_import_needed": round(grid_needed, 3),
+            "battery_kwh_delivered": round(daily_battery_delivered[date], 3),
+            "grid_export_kwh": round(daily_grid_export[date], 3),
             "self_sufficient": is_self_sufficient,
             "self_sufficiency_pct": ss_pct,
         })
@@ -133,6 +145,29 @@ def simulate_battery(
         else:
             current_streak = 0
 
+    # Solar-season span: calendar days between first and last self-sufficient day,
+    # what fraction of those days were self-sufficient, and battery/export totals
+    # within that window.
+    span_days = 0
+    self_sufficient_pct_in_span = 0.0
+    battery_kwh_delivered = 0.0
+    grid_export_kwh = 0.0
+
+    if first_self_sufficient_day and last_self_sufficient_day:
+        first_date = date_type.fromisoformat(first_self_sufficient_day)
+        last_date = date_type.fromisoformat(last_self_sufficient_day)
+        span_days = (last_date - first_date).days + 1
+        self_sufficient_pct_in_span = round(
+            self_sufficient_days / span_days * 100, 1
+        )
+        for day in daily_results:
+            if first_self_sufficient_day <= day["date"] <= last_self_sufficient_day:
+                battery_kwh_delivered += day["battery_kwh_delivered"]
+                grid_export_kwh += day["grid_export_kwh"]
+
+    battery_kwh_delivered = round(battery_kwh_delivered, 1)
+    grid_export_kwh = round(grid_export_kwh, 1)
+
     return {
         "self_sufficient_days": self_sufficient_days,
         "self_sufficiency_yesterday": self_sufficiency_yesterday,
@@ -140,5 +175,9 @@ def simulate_battery(
         "first_self_sufficient_day": first_self_sufficient_day,
         "last_self_sufficient_day": last_self_sufficient_day,
         "max_consecutive_days": max_consecutive_days,
+        "span_days": span_days,
+        "self_sufficient_pct_in_span": self_sufficient_pct_in_span,
+        "battery_kwh_delivered": battery_kwh_delivered,
+        "grid_export_kwh": grid_export_kwh,
         "daily_results": daily_results,
     }
