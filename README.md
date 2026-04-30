@@ -24,6 +24,8 @@ For each simulated battery size you get:
 
 The battery carries charge between days, so a sunny day can power the house through the following night and into the next morning — just like a real battery would.
 
+![Dashboard cards showing daily self-sufficiency, solar season % per battery size, and a bar chart comparing battery sizes](images/screenshot-cards.png)
+
 ## Requirements
 
 - Home Assistant with the Recorder integration enabled (default on most installs)
@@ -61,7 +63,9 @@ To compare multiple battery sizes, add the integration again with a different ba
 
 ## Visualising results
 
-Each battery entry writes daily self-sufficiency percentages as an external statistic. You can plot all battery sizes on a single graph using a **Statistics graph** card.
+### Card 1 — Daily self-sufficiency over time
+
+Each battery entry writes daily self-sufficiency percentages as an external statistic. Plot all battery sizes together using a **Statistics graph** card.
 
 Add a new card, switch to the YAML editor, and paste:
 
@@ -92,18 +96,13 @@ Adjust the list to match the battery sizes you have configured. The statistic ID
 
 > **Note:** The visual editor will show validation warnings for these entries — that is expected. Save via the YAML editor and the card will render correctly.
 
-### Solar season comparison
+### Card 2 — Battery size comparison (current values)
 
-To compare how often each battery size achieves full self-sufficiency during the solar season, use a bar chart of the **Self-sufficient % of solar season** sensor. These are regular HA sensors, so no YAML editor workaround is needed:
+Shows the current solar-season self-sufficiency for each battery size as a list. No extra integrations needed.
 
 ```yaml
-type: statistics-graph
-chart_type: bar
+type: entities
 title: Self-sufficient % of solar season
-days_to_show: 7
-stat_types:
-  - mean
-unit: "%"
 entities:
   - entity: sensor.home_battery_sizer_5_kwh_self_sufficient_of_solar_season
     name: 5 kWh
@@ -119,18 +118,57 @@ entities:
     name: 30 kWh
 ```
 
-This shows one bar per battery size so you can immediately see the diminishing returns as capacity grows. A simple list view of the current values also works:
+### Card 3 — Battery size vs self-sufficiency chart
+
+Visualises the diminishing returns as battery size grows. Requires [apexcharts-card](https://github.com/RomRider/apexcharts-card) (available via HACS).
 
 ```yaml
-type: entities
-title: Self-sufficient % of solar season
-entities:
+type: custom:apexcharts-card
+graph_span: 2h
+header:
+  show: true
+  title: Battery size vs self-sufficiency (solar season)
+apex_config:
+  chart:
+    type: bar
+    height: 300
+  plotOptions:
+    bar:
+      horizontal: false
+      columnWidth: 70%
+  dataLabels:
+    enabled: true
+    formatter: |
+      EVAL:function(val) { return val ? val.toFixed(1) + '%' : ''; }
+  yaxis:
+    min: 0
+    max: 100
+    title:
+      text: "% self-sufficient"
+  xaxis:
+    labels:
+      show: false
+    axisTicks:
+      show: false
+all_series_config:
+  group_by:
+    func: last
+    duration: 2h
+  show:
+    legend_value: true
+series:
   - entity: sensor.home_battery_sizer_5_kwh_self_sufficient_of_solar_season
+    name: "5 kWh"
   - entity: sensor.home_battery_sizer_10_kwh_self_sufficient_of_solar_season
+    name: "10 kWh"
   - entity: sensor.home_battery_sizer_15_kwh_self_sufficient_of_solar_season
+    name: "15 kWh"
   - entity: sensor.home_battery_sizer_20_kwh_self_sufficient_of_solar_season
+    name: "20 kWh"
   - entity: sensor.home_battery_sizer_25_kwh_self_sufficient_of_solar_season
+    name: "25 kWh"
   - entity: sensor.home_battery_sizer_30_kwh_self_sufficient_of_solar_season
+    name: "30 kWh"
 ```
 
 ## How it works
