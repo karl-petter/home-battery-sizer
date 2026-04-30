@@ -145,21 +145,33 @@ def simulate_battery(
         else:
             current_streak = 0
 
-    # Solar-season span: calendar days between first and last self-sufficient day,
-    # what fraction of those days were self-sufficient, and battery/export totals
-    # within that window.
+    # Solar-season span: restrict to a single calendar year so that first/last
+    # don't cross winter (e.g. May 2025 → April 2026 is meaningless as a season).
+    # Pick the year with the most self-sufficient days — the most complete season.
     span_days = 0
     self_sufficient_pct_in_span = 0.0
     battery_kwh_delivered = 0.0
     grid_export_kwh = 0.0
+    first_self_sufficient_day = None
+    last_self_sufficient_day = None
 
-    if first_self_sufficient_day and last_self_sufficient_day:
+    ss_days_by_year: dict[str, list[str]] = {}
+    for day in daily_results:
+        if day["self_sufficient"]:
+            year = day["date"][:4]
+            ss_days_by_year.setdefault(year, []).append(day["date"])
+
+    if ss_days_by_year:
+        best_year = max(ss_days_by_year, key=lambda y: len(ss_days_by_year[y]))
+        season_days = ss_days_by_year[best_year]  # already sorted (dates are ISO)
+        first_self_sufficient_day = season_days[0]
+        last_self_sufficient_day = season_days[-1]
+
         first_date = date_type.fromisoformat(first_self_sufficient_day)
         last_date = date_type.fromisoformat(last_self_sufficient_day)
         span_days = (last_date - first_date).days + 1
-        self_sufficient_pct_in_span = round(
-            self_sufficient_days / span_days * 100, 1
-        )
+        self_sufficient_pct_in_span = round(len(season_days) / span_days * 100, 1)
+
         for day in daily_results:
             if first_self_sufficient_day <= day["date"] <= last_self_sufficient_day:
                 battery_kwh_delivered += day["battery_kwh_delivered"]
