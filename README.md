@@ -14,9 +14,13 @@ For each simulated battery size you get:
 | --- | --- |
 | Self-sufficient days | Days in the past year where solar + battery covered 100% of consumption |
 | Self-sufficiency yesterday | Percentage of yesterday's consumption covered by solar + battery |
-| First self-sufficient day | Earliest day in the past year the house was fully self-sufficient |
-| Last self-sufficient day | Most recent day the house was fully self-sufficient |
+| First self-sufficient day | First day of the solar season (spring) |
+| Last self-sufficient day | Last day of the solar season (autumn) |
 | Max consecutive self-sufficient days | Longest unbroken streak of fully self-sufficient days |
+| Solar season length | Calendar days between first and last self-sufficient day |
+| Self-sufficient % of solar season | Percentage of solar-season days that were fully self-sufficient |
+| Battery energy delivered | kWh the battery supplied to the house during the solar season |
+| Grid export during solar season | kWh still exported to the grid despite the battery (surplus that didn't fit) |
 
 The battery carries charge between days, so a sunny day can power the house through the following night and into the next morning — just like a real battery would.
 
@@ -83,6 +87,44 @@ entities:
 Adjust the list to match the battery sizes you have configured. The statistic ID format is always `home_battery_sizer:self_sufficiency_daily_{size}kwh` (e.g. `_7_5kwh` for 7.5 kWh).
 
 > **Note:** The visual editor will show validation warnings for these entries — that is expected. Save via the YAML editor and the card will render correctly.
+
+### Solar season comparison
+
+To compare how often each battery size achieves full self-sufficiency during the solar season, use a bar chart of the **Self-sufficient % of solar season** sensor. These are regular HA sensors, so no YAML editor workaround is needed:
+
+```yaml
+type: statistics-graph
+chart_type: bar
+title: Self-sufficient % of solar season
+days_to_show: 7
+stat_types:
+  - mean
+unit: "%"
+entities:
+  - entity: sensor.home_battery_sizer_1_kwh_self_sufficient_of_solar_season
+    name: 1 kWh
+  - entity: sensor.home_battery_sizer_5_kwh_self_sufficient_of_solar_season
+    name: 5 kWh
+  - entity: sensor.home_battery_sizer_10_kwh_self_sufficient_of_solar_season
+    name: 10 kWh
+  - entity: sensor.home_battery_sizer_15_kwh_self_sufficient_of_solar_season
+    name: 15 kWh
+  - entity: sensor.home_battery_sizer_20_kwh_self_sufficient_of_solar_season
+    name: 20 kWh
+```
+
+This shows one bar per battery size so you can immediately see the diminishing returns as capacity grows. A simple list view of the current values also works:
+
+```yaml
+type: entities
+title: Self-sufficient % of solar season
+entities:
+  - entity: sensor.home_battery_sizer_1_kwh_self_sufficient_of_solar_season
+  - entity: sensor.home_battery_sizer_5_kwh_self_sufficient_of_solar_season
+  - entity: sensor.home_battery_sizer_10_kwh_self_sufficient_of_solar_season
+  - entity: sensor.home_battery_sizer_15_kwh_self_sufficient_of_solar_season
+  - entity: sensor.home_battery_sizer_20_kwh_self_sufficient_of_solar_season
+```
 
 ## How it works
 
