@@ -7,7 +7,8 @@
   "config_flow": true,
   "documentation": "https://github.com/karl-petter/home-battery-sizer",
   "issue_tracker": "https://github.com/karl-petter/home-battery-sizer/issues",
+  "iot_class": "local_polling",
   "requirements": [],
-  "version": "0.1.0",
+  "version": "0.1.0-alpha",
   "homeassistant": "2024.12.0"
 }
