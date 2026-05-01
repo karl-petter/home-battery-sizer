@@ -14,7 +14,11 @@ from .const import (
     CONF_BATTERY_SIZE,
     CONF_GRID_EXPORT_SENSOR,
     CONF_GRID_IMPORT_SENSOR,
+    CONF_MIN_SOC_PCT,
     CONF_SOLAR_SENSOR,
+    CONF_USABLE_CAPACITY_PCT,
+    DEFAULT_MIN_SOC_PCT,
+    DEFAULT_USABLE_CAPACITY_PCT,
     DOMAIN,
 )
 
@@ -92,6 +96,26 @@ class HomebatterysizeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         "description": "Enter the battery capacity estimate in kWh.",
                     },
                 ): vol.All(vol.Coerce(float), vol.Range(min=0)),
+                vol.Required(
+                    CONF_USABLE_CAPACITY_PCT,
+                    default=DEFAULT_USABLE_CAPACITY_PCT,
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=50, max=100, step=1,
+                        unit_of_measurement="%",
+                        mode=selector.NumberSelectorMode.BOX,
+                    )
+                ),
+                vol.Required(
+                    CONF_MIN_SOC_PCT,
+                    default=DEFAULT_MIN_SOC_PCT,
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=0, max=50, step=1,
+                        unit_of_measurement="%",
+                        mode=selector.NumberSelectorMode.BOX,
+                    )
+                ),
             }
         )
 
@@ -172,10 +196,14 @@ class HomeBatterySizerOptionsFlow(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        current_size = self._config_entry.options.get(
-            CONF_BATTERY_SIZE,
-            self._config_entry.data.get(CONF_BATTERY_SIZE, 10.0),
-        )
+        def _get(key, default):
+            return self._config_entry.options.get(
+                key, self._config_entry.data.get(key, default)
+            )
+
+        current_size = _get(CONF_BATTERY_SIZE, 10.0)
+        current_usable = _get(CONF_USABLE_CAPACITY_PCT, DEFAULT_USABLE_CAPACITY_PCT)
+        current_min_soc = _get(CONF_MIN_SOC_PCT, DEFAULT_MIN_SOC_PCT)
 
         return self.async_show_form(
             step_id="init",
@@ -183,6 +211,20 @@ class HomeBatterySizerOptionsFlow(config_entries.OptionsFlow):
                 {
                     vol.Required(CONF_BATTERY_SIZE, default=current_size): vol.All(
                         vol.Coerce(float), vol.Range(min=0)
+                    ),
+                    vol.Required(CONF_USABLE_CAPACITY_PCT, default=current_usable): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=50, max=100, step=1,
+                            unit_of_measurement="%",
+                            mode=selector.NumberSelectorMode.BOX,
+                        )
+                    ),
+                    vol.Required(CONF_MIN_SOC_PCT, default=current_min_soc): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=0, max=50, step=1,
+                            unit_of_measurement="%",
+                            mode=selector.NumberSelectorMode.BOX,
+                        )
                     ),
                 }
             ),

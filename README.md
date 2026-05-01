@@ -1,6 +1,6 @@
 # Home Battery Sizer
 
-A custom Home Assistant integration that analyses one year of historical solar and grid data to help you decide on the right home battery size.
+A Home Assistant integration for homeowners with solar panels who are thinking about adding a home battery. It uses your own historical solar and grid data to simulate different battery sizes, so you can see the real impact before you buy.
 
 ## What you get
 
@@ -186,18 +186,19 @@ Results update every hour.
 
 ## Simulation assumptions
 
-The simulation is intentionally simplified:
+The simulation models two real-world battery characteristics that you configure during setup:
 
-- **No minimum state of charge** — the battery is modelled as dischargeable to 0 kWh. Real batteries reserve a buffer (commonly 5–10%) to protect cell longevity.
-- **No charge/discharge rate limit** — the battery can absorb or deliver any amount within a single hour. Real inverters have a maximum power rating (e.g. 5 kW).
-- **No capacity degradation** — usable capacity stays constant. Real batteries lose a few percent per year and typically deliver less than their rated kWh even when new.
+- **Usable capacity** (default 90%) — batteries cannot use 100% of their rated kWh due to chemistry and internal losses. A new battery typically delivers 85–95% of its rated capacity; this figure decreases as the battery ages.
+- **Minimum state of charge** (default 5%) — most batteries reserve a buffer at the bottom to protect cell longevity. Check your battery's manual for the exact figure.
+
+Two simplifications remain:
+
+- **No charge/discharge rate limit** — the simulation assumes the battery can absorb or deliver any amount within a single hour. Real inverters have a maximum power rating (e.g. 5 kW).
 - **Fixed round-trip efficiency** — a flat 90% is applied to every charge cycle regardless of temperature or state of charge.
-
-**Workaround for real-world accuracy:** enter the *usable* kWh rather than the rated capacity. For example, a 88 kWh battery with ~10% capacity loss and a 5% minimum reserve has roughly 77–78 kWh of usable energy — enter that number instead of 88. This one figure captures both the rated-vs-usable gap and the minimum SoC reserve in a single input.
 
 ## Tips
 
 - Add a 0 kWh entry (no battery) as a baseline to see your current self-sufficiency from solar alone
-- Enter the battery's *usable* capacity, not the rated kWh on the spec sheet — see Simulation assumptions above
+- Enter the battery's *rated* capacity during setup — the usable capacity and minimum SoC settings handle the rest
 - Self-sufficient days will plateau as you increase battery size — the last few days of grid import are typically dark winter days that no realistic battery can cover
 - The "max consecutive days" sensor shows the longest summer streak — useful for understanding how long a run of good weather the battery can sustain

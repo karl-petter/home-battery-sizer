@@ -9,7 +9,7 @@ from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DOMAIN, DEFAULT_USABLE_CAPACITY_PCT, DEFAULT_MIN_SOC_PCT
 from .recorder import async_get_hourly_energy_data
 from .simulation import simulate_battery
 
@@ -27,6 +27,8 @@ class HomeBatterySizerCoordinator(DataUpdateCoordinator):
         grid_import_sensor: str,
         grid_export_sensor: str,
         battery_size: float,
+        usable_capacity_pct: float = DEFAULT_USABLE_CAPACITY_PCT,
+        min_soc_pct: float = DEFAULT_MIN_SOC_PCT,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -40,6 +42,8 @@ class HomeBatterySizerCoordinator(DataUpdateCoordinator):
         self.grid_import_sensor = grid_import_sensor
         self.grid_export_sensor = grid_export_sensor
         self.battery_size = battery_size
+        self.usable_capacity_pct = usable_capacity_pct
+        self.min_soc_pct = min_soc_pct
         size_slug = f"{battery_size:g}".replace(".", "_")
         self.statistic_id = f"{DOMAIN}:self_sufficiency_daily_{size_slug}kwh"
 
@@ -54,7 +58,12 @@ class HomeBatterySizerCoordinator(DataUpdateCoordinator):
                 days=365,
             )
 
-            result = simulate_battery(hourly_data, self.battery_size)
+            result = simulate_battery(
+                hourly_data,
+                self.battery_size,
+                usable_capacity_pct=self.usable_capacity_pct,
+                min_soc_pct=self.min_soc_pct,
+            )
 
             await self._inject_daily_statistics(result["daily_results"])
 

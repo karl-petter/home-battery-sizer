@@ -11,7 +11,11 @@ from .const import (
     CONF_BATTERY_SIZE,
     CONF_GRID_EXPORT_SENSOR,
     CONF_GRID_IMPORT_SENSOR,
+    CONF_MIN_SOC_PCT,
     CONF_SOLAR_SENSOR,
+    CONF_USABLE_CAPACITY_PCT,
+    DEFAULT_MIN_SOC_PCT,
+    DEFAULT_USABLE_CAPACITY_PCT,
     DOMAIN,
 )
 from .coordinator import HomeBatterySizerCoordinator
@@ -25,8 +29,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Home Battery Sizer from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    # Battery size can be overridden via options after initial setup
-    battery_size = entry.options.get(CONF_BATTERY_SIZE, entry.data[CONF_BATTERY_SIZE])
+    # All numeric settings can be overridden via options after initial setup
+    def _get(key, default):
+        return entry.options.get(key, entry.data.get(key, default))
+
+    battery_size = _get(CONF_BATTERY_SIZE, 10.0)
+    usable_capacity_pct = _get(CONF_USABLE_CAPACITY_PCT, DEFAULT_USABLE_CAPACITY_PCT)
+    min_soc_pct = _get(CONF_MIN_SOC_PCT, DEFAULT_MIN_SOC_PCT)
 
     # Create coordinator
     coordinator = HomeBatterySizerCoordinator(
@@ -36,6 +45,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         grid_import_sensor=entry.data[CONF_GRID_IMPORT_SENSOR],
         grid_export_sensor=entry.data[CONF_GRID_EXPORT_SENSOR],
         battery_size=battery_size,
+        usable_capacity_pct=usable_capacity_pct,
+        min_soc_pct=min_soc_pct,
     )
 
     # Fetch initial data

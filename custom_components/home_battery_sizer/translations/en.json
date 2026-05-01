@@ -4,10 +4,14 @@
       "init": {
         "title": "Battery Sizer options",
         "data": {
-          "battery_size": "Battery capacity (kWh)"
+          "battery_size": "Battery capacity (kWh)",
+          "usable_capacity_pct": "Usable capacity",
+          "min_soc_pct": "Minimum state of charge"
         },
         "data_description": {
-          "battery_size": "The battery size you want to simulate"
+          "battery_size": "The battery size you want to simulate",
+          "usable_capacity_pct": "Percentage of rated capacity that is actually usable (typically 85–95% when new, lower as the battery ages)",
+          "min_soc_pct": "Percentage of rated capacity always kept in reserve to protect battery longevity (check your battery's manual)"
         }
       }
     }
@@ -21,13 +25,17 @@
           "solar_sensor": "Solar production sensor",
           "grid_import_sensor": "Grid import sensor",
           "grid_export_sensor": "Grid export sensor",
-          "battery_size": "Battery capacity (kWh)"
+          "battery_size": "Battery capacity (kWh)",
+          "usable_capacity_pct": "Usable capacity",
+          "min_soc_pct": "Minimum state of charge"
         },
         "data_description": {
           "solar_sensor": "Cumulative kWh sensor for solar production (e.g. from your inverter)",
           "grid_import_sensor": "Cumulative kWh sensor for energy imported from the grid",
           "grid_export_sensor": "Cumulative kWh sensor for energy exported to the grid",
-          "battery_size": "The battery size you want to simulate"
+          "battery_size": "The battery size you want to simulate",
+          "usable_capacity_pct": "Percentage of rated capacity that is actually usable (typically 85–95% when new, lower as the battery ages)",
+          "min_soc_pct": "Percentage of rated capacity always kept in reserve to protect battery longevity (check your battery's manual)"
         }
       }
     }

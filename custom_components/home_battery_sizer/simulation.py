@@ -14,6 +14,8 @@ _LOGGER = logging.getLogger(__name__)
 def simulate_battery(
     hourly_data: list[dict[str, Any]],
     battery_size: float,
+    usable_capacity_pct: float = 90.0,
+    min_soc_pct: float = 5.0,
 ) -> dict[str, Any]:
     """Simulate battery performance across hourly energy data.
 
@@ -49,7 +51,9 @@ def simulate_battery(
             "daily_results": [],
         }
 
-    battery_charge = 0.0
+    effective_max = battery_size * (usable_capacity_pct / 100)
+    effective_min = battery_size * (min_soc_pct / 100)
+    battery_charge = effective_min
 
     # Accumulators per day
     daily_grid_needed: dict[str, float] = defaultdict(float)
@@ -71,12 +75,13 @@ def simulate_battery(
         # Simulate: solar first covers consumption, surplus charges battery
         if solar >= consumption:
             surplus = solar - consumption
-            battery_charge = min(battery_charge + surplus * BATTERY_EFFICIENCY, battery_size)
+            battery_charge = min(battery_charge + surplus * BATTERY_EFFICIENCY, effective_max)
             grid_needed = 0.0
             discharge = 0.0
         else:
             deficit = consumption - solar
-            discharge = min(deficit, battery_charge)
+            available = max(0.0, battery_charge - effective_min)
+            discharge = min(deficit, available)
             battery_charge -= discharge
             grid_needed = deficit - discharge
 
