@@ -184,8 +184,20 @@ Battery charge carries over between hours and days. A day counts as "self-suffic
 
 Results update every hour.
 
+## Simulation assumptions
+
+The simulation is intentionally simplified:
+
+- **No minimum state of charge** — the battery is modelled as dischargeable to 0 kWh. Real batteries reserve a buffer (commonly 5–10%) to protect cell longevity.
+- **No charge/discharge rate limit** — the battery can absorb or deliver any amount within a single hour. Real inverters have a maximum power rating (e.g. 5 kW).
+- **No capacity degradation** — usable capacity stays constant. Real batteries lose a few percent per year and typically deliver less than their rated kWh even when new.
+- **Fixed round-trip efficiency** — a flat 90% is applied to every charge cycle regardless of temperature or state of charge.
+
+**Workaround for real-world accuracy:** enter the *usable* kWh rather than the rated capacity. For example, a 88 kWh battery with ~10% capacity loss and a 5% minimum reserve has roughly 77–78 kWh of usable energy — enter that number instead of 88. This one figure captures both the rated-vs-usable gap and the minimum SoC reserve in a single input.
+
 ## Tips
 
 - Add a 0 kWh entry (no battery) as a baseline to see your current self-sufficiency from solar alone
+- Enter the battery's *usable* capacity, not the rated kWh on the spec sheet — see Simulation assumptions above
 - Self-sufficient days will plateau as you increase battery size — the last few days of grid import are typically dark winter days that no realistic battery can cover
 - The "max consecutive days" sensor shows the longest summer streak — useful for understanding how long a run of good weather the battery can sustain
