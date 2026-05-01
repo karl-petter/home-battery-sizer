@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "self_sufficient_days": { "default": "mdi:calendar-check" },
+      "self_sufficiency_yesterday": { "default": "mdi:percent-circle-outline" },
+      "first_self_sufficient_day": { "default": "mdi:calendar-arrow-right" },
+      "last_self_sufficient_day": { "default": "mdi:calendar-arrow-left" },
+      "max_consecutive_days": { "default": "mdi:calendar-multiple-check" },
+      "solar_season_span": { "default": "mdi:weather-sunny" },
+      "self_sufficient_pct_in_span": { "default": "mdi:percent-circle" },
+      "battery_kwh_delivered": { "default": "mdi:battery-charging" },
+      "grid_export_kwh": { "default": "mdi:transmission-tower-export" }
+    }
+  }
+}
