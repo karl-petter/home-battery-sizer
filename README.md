@@ -26,6 +26,8 @@ The battery carries charge between days, so a sunny day can power the house thro
 
 ![Dashboard cards showing daily self-sufficiency, solar season % per battery size, and a bar chart comparing battery sizes](images/screenshot-cards.png)
 
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=karl-petter&repository=home-battery-sizer&category=integration)
+
 ## Requirements
 
 - Home Assistant with the Recorder integration enabled (default on most installs)
