@@ -239,7 +239,7 @@ entities:
   - entity: home_battery_sizer:consumption_daily
     name: House consumption
   - entity: sensor.your_grid_export_sensor
-    name: Grid export
+    name: Grid export (actual, without battery)
   - entity: home_battery_sizer:battery_delivered_daily_5kwh
     name: Battery 5 kWh
   - entity: home_battery_sizer:battery_delivered_daily_10kwh
