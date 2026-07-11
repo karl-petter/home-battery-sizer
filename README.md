@@ -240,26 +240,26 @@ entities:
   - entity: sensor.home_battery_sizer_20_kwh_first_self_sufficient_day_previous_year
     type: attribute
     attribute: first_solar_production_day
-    name: Production starts
+    name: First production date
     icon: mdi:white-balance-sunny
   - entity: sensor.home_battery_sizer_20_kwh_first_self_sufficient_day_previous_year
     type: attribute
     attribute: first_solar_surplus_day
-    name: First surplus to store
+    name: First surplus date
     icon: mdi:battery-plus
   - entity: sensor.home_battery_sizer_20_kwh_first_self_sufficient_day_previous_year
-    name: Fully grid-free from
+    name: First fully grid-free date
   - entity: sensor.home_battery_sizer_20_kwh_last_self_sufficient_day_previous_year
-    name: Fully grid-free until
+    name: Last fully grid-free date
   - entity: sensor.home_battery_sizer_20_kwh_last_self_sufficient_day_previous_year
     type: attribute
     attribute: last_solar_surplus_day
-    name: Last surplus to store
+    name: Last surplus date
     icon: mdi:battery-minus
   - entity: sensor.home_battery_sizer_20_kwh_last_self_sufficient_day_previous_year
     type: attribute
     attribute: last_solar_production_day
-    name: Production ends
+    name: Last production date
     icon: mdi:weather-sunset-down
 ```
 
