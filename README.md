@@ -63,7 +63,9 @@ Share of the year so far that was fully self-sufficient:
 
 The battery carries charge between days, so a sunny day can power the house through the following night and into the next morning — just like a real battery would.
 
-![Dashboard cards showing daily self-sufficiency and a bar chart comparing energy self-sufficiency per battery size](images/screenshot-cards.png)
+![Dashboard row with the daily self-sufficiency line, battery size comparison, daily energy flows and solar year milestones](images/dashboard-overview-daily.png)
+
+![Dashboard row with the monthly self-sufficiency bars, battery size comparison, daily energy flows and solar year milestones](images/dashboard-overview-monthly.png)
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=karl-petter&repository=home-battery-sizer&category=integration)
 
@@ -108,6 +110,8 @@ To compare multiple battery sizes, add the integration again with a different ba
 
 Each battery entry writes daily self-sufficiency percentages as an external statistic. Plot all battery sizes together using a **Statistics graph** card.
 
+![Daily self-sufficiency per battery size](images/daily-self-sufficiency.png)
+
 Add a new card, switch to the YAML editor, and paste:
 
 ```yaml
@@ -136,7 +140,9 @@ entities:
 
 Adjust the list to match the battery sizes you have configured. The statistic ID format is always `home_battery_sizer:self_sufficiency_daily_{size}kwh` (e.g. `_7_5kwh` for 7.5 kWh).
 
-**Monthly alternative** — the same statistic aggregated per month over a full year. This view makes the seasons obvious: the winter months where no battery helps, and the summer months where the sizes separate (a size that never reaches ~100% in June/July is too small to bridge your nights). Same card, three changed lines:
+**Monthly alternative** — the same statistic aggregated per month over a full year. This view makes the seasons obvious: the winter months where no battery helps, and the summer months where the sizes separate (a size that never reaches ~100% in June/July is too small to bridge your nights). ![Monthly self-sufficiency per battery size across a full year](images/monthly-self-sufficiency.png)
+
+Same card, three changed lines:
 
 ```yaml
 type: statistics-graph
@@ -169,6 +175,8 @@ Pick whichever reads best for you — daily lines show the day-to-day variation 
 ### Card 2 — Battery size vs self-sufficiency chart
 
 Visualises the diminishing returns as battery size grows. Requires [apexcharts-card](https://github.com/RomRider/apexcharts-card) (available via HACS).
+
+![Energy self-sufficiency per battery size, previous year](images/battery-size-comparison.png)
 
 ```yaml
 type: custom:apexcharts-card
@@ -224,6 +232,8 @@ The y-axis is deliberately not pinned to 100%: yearly self-sufficiency includes 
 
 Combines actual solar production and grid export alongside simulated daily house consumption and the kWh each battery would deliver. House consumption includes solar used directly — it cannot be read from a grid meter alone. No extra integrations needed.
 
+![Daily production, consumption, actual export and battery coverage per size](images/daily-production-consumption.png)
+
 Replace `sensor.your_solar_production_sensor` and `sensor.your_grid_export_sensor` with the sensor entity IDs you selected during integration setup.
 
 ```yaml
@@ -262,6 +272,8 @@ Adjust the battery size series to match the sizes you have configured. You can a
 ### Card 4 — Solar year milestones
 
 Shows the previous (complete) year's sequence for one battery size: when the panels wake up, when there is first surplus to store, from when to when the house is fully grid-free, and how the year winds down. The first two dates are attributes on the date sensors (see the Calendar sensor table), displayed with core `attribute` rows — no extra integrations needed.
+
+![Solar year milestones for a 20 kWh battery, previous year](images/solar-year-milestones.png)
 
 ```yaml
 type: entities
