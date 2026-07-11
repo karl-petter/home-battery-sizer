@@ -115,6 +115,7 @@ type: statistics-graph
 chart_type: line
 title: Daily self-sufficiency
 days_to_show: 365
+period: day
 stat_types:
   - mean
 unit: "%"
