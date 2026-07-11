@@ -49,10 +49,10 @@
         "name": "Battery discharge (previous year)"
       },
       "grid_export_kwh": {
-        "name": "Battery grid export (simulated)"
+        "name": "Battery uncaptured surplus"
       },
       "grid_export_kwh_prev_year": {
-        "name": "Battery grid export (simulated, previous year)"
+        "name": "Battery uncaptured surplus (previous year)"
       },
       "energy_self_sufficiency": {
         "name": "Energy self-sufficiency"

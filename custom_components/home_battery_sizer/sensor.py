@@ -284,7 +284,7 @@ class BatteryKwhDeliveredSensor(YearSummarySensorBase):
 
 
 class GridExportKwhSensor(YearSummarySensorBase):
-    """Simulated kWh still exported this year — surplus the battery couldn't store."""
+    """Solar surplus the battery couldn't store — still exported to the grid in the simulation."""
 
     _base_key = "grid_export_kwh"
     _attr_state_class = SensorStateClass.TOTAL

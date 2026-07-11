@@ -17,7 +17,7 @@ For each simulated battery size you get two groups of sensors. Entity IDs are `s
 | Energy self-sufficiency | `_energy_self_sufficiency` | Share of the year's consumption covered by solar + battery — **the headline number for comparing sizes** |
 | Energy self-sufficiency yesterday | `_energy_self_sufficiency_yesterday` | Share of yesterday's consumption covered by solar + battery |
 | Battery discharge | `_battery_discharge` | kWh the battery supplied to the house this year |
-| Battery grid export (simulated) | `_battery_grid_export_simulated` | kWh you would still have exported (surplus that didn't fit in the battery) — compare with your real export to see what the battery would absorb |
+| Battery uncaptured surplus | `_battery_uncaptured_surplus` | Solar surplus the battery could not store — this energy still flows to the grid, so comparing it with your real export shows what the battery would absorb. The number a bigger battery shrinks. |
 
 **Calendar** — how many days, and when in the year, you'd be fully grid-free:
 
