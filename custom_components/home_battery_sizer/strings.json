@@ -18,6 +18,9 @@
       "self_sufficient_days": {
         "name": "Self-sufficient days (this year)"
       },
+      "self_sufficient_days_prev_year": {
+        "name": "Self-sufficient days (previous year)"
+      },
       "self_sufficiency_yesterday": {
         "name": "Self-sufficiency yesterday"
       },

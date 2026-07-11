@@ -31,6 +31,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             SelfSufficientDaysSensor(coordinator, entry),
+            SelfSufficientDaysSensor(coordinator, entry, previous_year=True),
             SelfSufficiencyYesterdaySensor(coordinator, entry),
             FirstSelfSufficientDaySensor(coordinator, entry),
             FirstSelfSufficientDaySensor(coordinator, entry, previous_year=True),

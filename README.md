@@ -24,7 +24,7 @@ For each simulated battery size you get:
 | Energy self-sufficiency | Share of the year's consumption covered by solar + battery — **the headline number for comparing sizes** |
 | Share of year self-sufficient | Share of the year's days that were 100% self-sufficient |
 
-The season sensors (first/last day, season length, season %) and the two yearly self-sufficiency sensors also exist in a **previous year** variant, so you can compare a partial current year against the last complete season. All sensors are computed over calendar years — the same window for every battery size — so different sizes are always directly comparable.
+The season sensors (first/last day, season length, season %), the self-sufficient days count, and the two yearly self-sufficiency sensors also exist in a **previous year** variant, so you can compare a partial current year against the last complete season. All sensors are computed over calendar years — the same window for every battery size — so different sizes are always directly comparable.
 
 When comparing battery sizes, use **Energy self-sufficiency** (or the self-sufficient day counts): these can only improve with a bigger battery. "Self-sufficient % of solar season" describes the *shape* of each battery's own season and is not monotonic in battery size — a bigger battery can start its season earlier, which lengthens the season and can lower the percentage.
 

@@ -51,6 +51,9 @@
       },
       "energy_self_sufficiency_prev_year": {
         "default": "mdi:home-percent"
+      },
+      "self_sufficient_days_prev_year": {
+        "default": "mdi:calendar-check"
       }
     }
   }
