@@ -251,9 +251,45 @@ Adjust the battery size series to match the sizes you have configured. On a sunn
 
 > **Note:** The visual editor will show validation warnings for the `home_battery_sizer:` entries — that is expected. Save via the YAML editor and the card will render correctly.
 
+### Card 5 — Solar year milestones
+
+Shows the spring sequence for one battery size: when the panels wake up, when there is first surplus to store, and from when the house is fully grid-free. The first two dates are attributes on the date sensors (see the Calendar sensor table), displayed with core `attribute` rows — no extra integrations needed.
+
+```yaml
+type: entities
+title: Solar year milestones (20 kWh)
+entities:
+  - entity: sensor.home_battery_sizer_20_kwh_first_self_sufficient_day
+    type: attribute
+    attribute: first_solar_production_day
+    name: Production starts
+    icon: mdi:white-balance-sunny
+  - entity: sensor.home_battery_sizer_20_kwh_first_self_sufficient_day
+    type: attribute
+    attribute: first_solar_surplus_day
+    name: First surplus to store
+    icon: mdi:battery-plus
+  - entity: sensor.home_battery_sizer_20_kwh_first_self_sufficient_day
+    name: Fully grid-free from
+  - entity: sensor.home_battery_sizer_20_kwh_last_self_sufficient_day
+    name: Fully grid-free until
+  - entity: sensor.home_battery_sizer_20_kwh_last_self_sufficient_day
+    type: attribute
+    attribute: last_solar_surplus_day
+    name: Last surplus to store
+    icon: mdi:battery-minus
+  - entity: sensor.home_battery_sizer_20_kwh_last_self_sufficient_day
+    type: attribute
+    attribute: last_solar_production_day
+    name: Production ends
+    icon: mdi:weather-sunset-down
+```
+
+Add the `_previous_year` variants of the same sensors to see the last complete year instead of the running one.
+
 ## How it works
 
-The simulation runs hourly across all available data (up to one year). For each hour:
+The simulation runs hourly across all available data (up to two years). For each hour:
 
 1. Consumption is estimated as `solar + grid_import − grid_export` from your historical meter readings
 2. Solar first covers consumption directly
