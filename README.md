@@ -21,8 +21,12 @@ For each simulated battery size you get:
 | Self-sufficient % of solar season | Percentage of this year's solar-season days that were fully self-sufficient |
 | Battery energy delivered (this year) | kWh the battery supplied to the house this calendar year |
 | Grid export (this year) | kWh still exported to the grid despite the battery (surplus that didn't fit) |
+| Energy self-sufficiency | Share of the year's consumption covered by solar + battery — **the headline number for comparing sizes** |
+| Share of year self-sufficient | Share of the year's days that were 100% self-sufficient |
 
-The season sensors (first/last day, season length, season %) also exist in a **previous year** variant, so you can compare a partial current year against the last complete season. All sensors are computed over calendar years — the same window for every battery size — so different sizes are always directly comparable.
+The season sensors (first/last day, season length, season %) and the two yearly self-sufficiency sensors also exist in a **previous year** variant, so you can compare a partial current year against the last complete season. All sensors are computed over calendar years — the same window for every battery size — so different sizes are always directly comparable.
+
+When comparing battery sizes, use **Energy self-sufficiency** (or the self-sufficient day counts): these can only improve with a bigger battery. "Self-sufficient % of solar season" describes the *shape* of each battery's own season and is not monotonic in battery size — a bigger battery can start its season earlier, which lengthens the season and can lower the percentage.
 
 The battery carries charge between days, so a sunny day can power the house through the following night and into the next morning — just like a real battery would.
 
@@ -102,23 +106,23 @@ Adjust the list to match the battery sizes you have configured. The statistic ID
 
 ### Card 2 — Battery size comparison (current values)
 
-Shows the current solar-season self-sufficiency for each battery size as a list. No extra integrations needed.
+Shows this year's energy self-sufficiency for each battery size as a list — the share of yearly consumption covered by solar + battery. No extra integrations needed.
 
 ```yaml
 type: entities
-title: Self-sufficient % of solar season
+title: Energy self-sufficiency (this year)
 entities:
-  - entity: sensor.home_battery_sizer_5_kwh_self_sufficient_of_solar_season
+  - entity: sensor.home_battery_sizer_5_kwh_energy_self_sufficiency
     name: 5 kWh
-  - entity: sensor.home_battery_sizer_10_kwh_self_sufficient_of_solar_season
+  - entity: sensor.home_battery_sizer_10_kwh_energy_self_sufficiency
     name: 10 kWh
-  - entity: sensor.home_battery_sizer_15_kwh_self_sufficient_of_solar_season
+  - entity: sensor.home_battery_sizer_15_kwh_energy_self_sufficiency
     name: 15 kWh
-  - entity: sensor.home_battery_sizer_20_kwh_self_sufficient_of_solar_season
+  - entity: sensor.home_battery_sizer_20_kwh_energy_self_sufficiency
     name: 20 kWh
-  - entity: sensor.home_battery_sizer_25_kwh_self_sufficient_of_solar_season
+  - entity: sensor.home_battery_sizer_25_kwh_energy_self_sufficiency
     name: 25 kWh
-  - entity: sensor.home_battery_sizer_30_kwh_self_sufficient_of_solar_season
+  - entity: sensor.home_battery_sizer_30_kwh_energy_self_sufficiency
     name: 30 kWh
 ```
 
@@ -131,7 +135,7 @@ type: custom:apexcharts-card
 graph_span: 2h
 header:
   show: true
-  title: Battery size vs self-sufficiency (solar season)
+  title: Battery size vs energy self-sufficiency
 apex_config:
   chart:
     type: bar
@@ -148,7 +152,7 @@ apex_config:
     min: 0
     max: 100
     title:
-      text: "% self-sufficient"
+      text: "% of consumption covered"
   xaxis:
     labels:
       show: false
@@ -161,17 +165,17 @@ all_series_config:
   show:
     legend_value: true
 series:
-  - entity: sensor.home_battery_sizer_5_kwh_self_sufficient_of_solar_season
+  - entity: sensor.home_battery_sizer_5_kwh_energy_self_sufficiency
     name: "5 kWh"
-  - entity: sensor.home_battery_sizer_10_kwh_self_sufficient_of_solar_season
+  - entity: sensor.home_battery_sizer_10_kwh_energy_self_sufficiency
     name: "10 kWh"
-  - entity: sensor.home_battery_sizer_15_kwh_self_sufficient_of_solar_season
+  - entity: sensor.home_battery_sizer_15_kwh_energy_self_sufficiency
     name: "15 kWh"
-  - entity: sensor.home_battery_sizer_20_kwh_self_sufficient_of_solar_season
+  - entity: sensor.home_battery_sizer_20_kwh_energy_self_sufficiency
     name: "20 kWh"
-  - entity: sensor.home_battery_sizer_25_kwh_self_sufficient_of_solar_season
+  - entity: sensor.home_battery_sizer_25_kwh_energy_self_sufficiency
     name: "25 kWh"
-  - entity: sensor.home_battery_sizer_30_kwh_self_sufficient_of_solar_season
+  - entity: sensor.home_battery_sizer_30_kwh_energy_self_sufficiency
     name: "30 kWh"
 ```
 

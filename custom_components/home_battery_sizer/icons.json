@@ -39,6 +39,18 @@
       },
       "self_sufficient_pct_in_span_prev_year": {
         "default": "mdi:percent-circle"
+      },
+      "year_self_sufficient_share": {
+        "default": "mdi:calendar-percent"
+      },
+      "year_self_sufficient_share_prev_year": {
+        "default": "mdi:calendar-percent"
+      },
+      "energy_self_sufficiency": {
+        "default": "mdi:home-percent"
+      },
+      "energy_self_sufficiency_prev_year": {
+        "default": "mdi:home-percent"
       }
     }
   }

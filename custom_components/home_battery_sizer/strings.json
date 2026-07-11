@@ -48,6 +48,18 @@
       "self_sufficient_pct_in_span_prev_year": {
         "name": "Self-sufficient % of solar season (previous year)"
       },
+      "year_self_sufficient_share": {
+        "name": "Share of year self-sufficient"
+      },
+      "year_self_sufficient_share_prev_year": {
+        "name": "Share of year self-sufficient (previous year)"
+      },
+      "energy_self_sufficiency": {
+        "name": "Energy self-sufficiency"
+      },
+      "energy_self_sufficiency_prev_year": {
+        "name": "Energy self-sufficiency (previous year)"
+      },
       "battery_kwh_delivered": {
         "name": "Battery energy delivered (this year)"
       },

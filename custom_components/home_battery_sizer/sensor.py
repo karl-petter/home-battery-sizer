@@ -41,6 +41,10 @@ async def async_setup_entry(
             SolarSeasonSpanSensor(coordinator, entry, previous_year=True),
             SelfSufficientPctInSpanSensor(coordinator, entry),
             SelfSufficientPctInSpanSensor(coordinator, entry, previous_year=True),
+            YearSelfSufficientShareSensor(coordinator, entry),
+            YearSelfSufficientShareSensor(coordinator, entry, previous_year=True),
+            EnergySelfSufficiencySensor(coordinator, entry),
+            EnergySelfSufficiencySensor(coordinator, entry, previous_year=True),
             BatteryKwhDeliveredSensor(coordinator, entry),
             GridExportKwhSensor(coordinator, entry),
         ]
@@ -267,6 +271,54 @@ class SelfSufficientPctInSpanSensor(YearSummarySensorBase):
             "year": self._year,
             "self_sufficient_days": summary.get("self_sufficient_days"),
             "span_days": summary.get("span_days"),
+        }
+
+
+class YearSelfSufficientShareSensor(YearSummarySensorBase):
+    """Share of the year's days (with data) that were 100% self-sufficient."""
+
+    _base_key = "year_self_sufficient_share"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = PERCENTAGE
+
+    @property
+    def native_value(self) -> float | None:
+        summary = self._summary
+        if summary is None:
+            return None
+        return summary.get("year_self_sufficient_share")
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        summary = self._summary or {}
+        return {
+            "year": self._year,
+            "self_sufficient_days": summary.get("self_sufficient_days"),
+            "days_with_data": summary.get("days_with_data"),
+        }
+
+
+class EnergySelfSufficiencySensor(YearSummarySensorBase):
+    """Share of the year's consumption covered by solar + battery."""
+
+    _base_key = "energy_self_sufficiency"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = PERCENTAGE
+
+    @property
+    def native_value(self) -> float | None:
+        summary = self._summary
+        if summary is None:
+            return None
+        return summary.get("energy_self_sufficiency_pct")
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        summary = self._summary or {}
+        return {
+            "year": self._year,
+            "consumption_kwh": summary.get("consumption_kwh"),
+            "grid_import_kwh": summary.get("grid_import_kwh"),
         }
 
 
