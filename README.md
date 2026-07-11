@@ -266,44 +266,32 @@ entities:
 
 Drop the `_previous_year` suffixes to follow the current year as it unfolds instead.
 
-### Card 5 — Where does the production go? (stacked)
+### Card 5 — Where does the production go?
 
-Splits each day's solar production into what the house consumed directly and what it consumed via the simulated battery — the rest of the production bar is surplus that would still be exported (or lost to charging efficiency). The core statistics-graph card cannot stack bars, so this uses [apexcharts-card](https://github.com/RomRider/apexcharts-card).
+Compares each day's solar production against what the house consumed directly and what it consumed via the simulated battery — the gap between production and the other two bars is the uncaptured surplus that still goes to the grid. Uses the core statistics-graph card.
 
-Replace `sensor.your_solar_production_sensor` with your solar sensor. If its statistics are recorded in Wh rather than kWh, uncomment the `transform` line.
+> **Why not stacked?** apexcharts-card cannot read external statistics (statistic IDs like `home_battery_sizer:...` have no state entity — [issue #707](https://github.com/RomRider/apexcharts-card/issues/707)), and the core card cannot stack. Grouped bars are the practical option.
+
+Replace `sensor.your_solar_production_sensor` with your solar sensor (if its statistics are in Wh, set the entity's display unit to kWh so the bars share a scale).
 
 ```yaml
-type: custom:apexcharts-card
-graph_span: 21d
-header:
-  show: true
-  title: Where does the production go? (20 kWh)
-apex_config:
-  chart:
-    stacked: true
-series:
-  - entity: home_battery_sizer:solar_direct_use_daily
-    name: Consumed directly
-    type: column
-    statistics:
-      type: change
-      period: day
-  - entity: home_battery_sizer:battery_delivered_daily_20kwh
-    name: Consumed via battery
-    type: column
-    statistics:
-      type: change
-      period: day
+type: statistics-graph
+chart_type: bar
+title: Where does the production go? (20 kWh)
+days_to_show: 21
+period: day
+stat_types:
+  - change
+entities:
   - entity: sensor.your_solar_production_sensor
     name: Production
-    type: line
-    # transform: "return x / 1000;"
-    statistics:
-      type: change
-      period: day
+  - entity: home_battery_sizer:solar_direct_use_daily
+    name: Consumed directly
+  - entity: home_battery_sizer:battery_delivered_daily_20kwh
+    name: Consumed via battery
 ```
 
-The gap between the production line and the top of the stacked bar is the energy this battery size fails to capture — watching that gap shrink (or not) as you compare sizes is the whole sizing question in one picture.
+Swap in a different `battery_delivered_daily_{size}kwh` series to see how a bigger battery closes the gap to the production bar.
 
 ## How it works
 
