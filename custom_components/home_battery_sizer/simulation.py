@@ -68,10 +68,15 @@ def simulate_battery(
         # consumption = solar + grid_import - grid_export
         consumption = max(0.0, solar + grid_import_hist - grid_export_hist)
 
-        # Simulate: solar first covers consumption, surplus charges battery
+        # Simulate: solar first covers consumption, surplus charges the battery,
+        # and whatever the battery can't accept is exported to the grid.
         if solar >= consumption:
             surplus = solar - consumption
-            battery_charge = min(battery_charge + surplus * BATTERY_EFFICIENCY, effective_max)
+            stored = min(surplus * BATTERY_EFFICIENCY, effective_max - battery_charge)
+            battery_charge += stored
+            # Charging draws stored/efficiency from the surplus; the rest is
+            # simulated export — surplus that didn't fit in the battery.
+            sim_export = max(0.0, surplus - stored / BATTERY_EFFICIENCY)
             grid_needed = 0.0
             discharge = 0.0
         else:
@@ -80,12 +85,13 @@ def simulate_battery(
             discharge = min(deficit, available)
             battery_charge -= discharge
             grid_needed = deficit - discharge
+            sim_export = 0.0
 
         daily_grid_needed[date] += grid_needed
         daily_solar[date] += solar
         daily_consumption[date] += consumption
         daily_battery_delivered[date] += discharge
-        daily_grid_export[date] += grid_export_hist
+        daily_grid_export[date] += sim_export
 
     # Build daily results
     self_sufficient_days = 0

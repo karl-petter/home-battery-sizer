@@ -64,7 +64,7 @@
         "name": "Battery energy delivered (this year)"
       },
       "grid_export_kwh": {
-        "name": "Grid export (this year)"
+        "name": "Simulated grid export (this year)"
       }
     }
   }

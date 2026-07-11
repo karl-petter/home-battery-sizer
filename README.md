@@ -20,7 +20,7 @@ For each simulated battery size you get:
 | Solar season length | Calendar days between first and last self-sufficient day this year |
 | Self-sufficient % of solar season | Percentage of this year's solar-season days that were fully self-sufficient |
 | Battery energy delivered (this year) | kWh the battery supplied to the house this calendar year |
-| Grid export (this year) | kWh still exported to the grid despite the battery (surplus that didn't fit) |
+| Simulated grid export (this year) | kWh you would still have exported with this battery in place (surplus that didn't fit) — compare with your real export to see what the battery would absorb |
 | Energy self-sufficiency | Share of the year's consumption covered by solar + battery — **the headline number for comparing sizes** |
 | Share of year self-sufficient | Share of the year's days that were 100% self-sufficient |
 
