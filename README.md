@@ -110,9 +110,11 @@ To compare multiple battery sizes, add the integration again with a different ba
 
 Each battery entry writes daily self-sufficiency percentages as an external statistic. Plot all battery sizes together using a **Statistics graph** card.
 
-![Daily self-sufficiency per battery size](images/daily-self-sufficiency.png)
+Add a new card, switch to the YAML editor, and paste one of the variants below.
 
-Add a new card, switch to the YAML editor, and paste:
+**Full year (lines)** — the season envelope at a glance:
+
+![Daily self-sufficiency over a full year](images/daily-self-sufficiency.png)
 
 ```yaml
 type: statistics-graph
@@ -138,11 +140,39 @@ entities:
     name: 30 kWh
 ```
 
+**Recent weeks (bars)** — day-by-day detail for the last three weeks; same entities, three changed lines:
+
+![Daily self-sufficiency bars for the last three weeks](images/daily-self-sufficiency-21d.png)
+
+```yaml
+type: statistics-graph
+chart_type: bar
+title: Daily self-sufficiency
+days_to_show: 21
+period: day
+stat_types:
+  - mean
+unit: "%"
+entities:
+  - entity: home_battery_sizer:self_sufficiency_daily_5kwh
+    name: 5 kWh
+  - entity: home_battery_sizer:self_sufficiency_daily_10kwh
+    name: 10 kWh
+  - entity: home_battery_sizer:self_sufficiency_daily_15kwh
+    name: 15 kWh
+  - entity: home_battery_sizer:self_sufficiency_daily_20kwh
+    name: 20 kWh
+  - entity: home_battery_sizer:self_sufficiency_daily_25kwh
+    name: 25 kWh
+  - entity: home_battery_sizer:self_sufficiency_daily_30kwh
+    name: 30 kWh
+```
+
 Adjust the list to match the battery sizes you have configured. The statistic ID format is always `home_battery_sizer:self_sufficiency_daily_{size}kwh` (e.g. `_7_5kwh` for 7.5 kWh).
 
-**Monthly alternative** — the same statistic aggregated per month over a full year. This view makes the seasons obvious: the winter months where no battery helps, and the summer months where the sizes separate (a size that never reaches ~100% in June/July is too small to bridge your nights). ![Monthly self-sufficiency per battery size across a full year](images/monthly-self-sufficiency.png)
+**Monthly (bars)** — the same statistic aggregated per month over a full year. This view makes the seasons obvious: the winter months where no battery helps, and the summer months where the sizes separate (a size that never reaches ~100% in June/July is too small to bridge your nights). ![Monthly self-sufficiency per battery size across a full year](images/monthly-self-sufficiency.png)
 
-Same card, three changed lines:
+
 
 ```yaml
 type: statistics-graph
@@ -168,7 +198,7 @@ entities:
     name: 30 kWh
 ```
 
-Pick whichever reads best for you — daily lines show the day-to-day variation across the year, monthly bars the seasons at a glance.
+Pick whichever reads best for you — yearly lines for the season envelope, recent bars for the day-to-day detail, monthly bars for the seasons at a glance.
 
 > **Note:** The visual editor will show validation warnings for these entries — that is expected. Save via the YAML editor and the card will render correctly.
 
