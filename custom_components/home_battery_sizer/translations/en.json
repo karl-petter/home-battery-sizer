@@ -43,7 +43,7 @@
   "entity": {
     "sensor": {
       "self_sufficient_days": {
-        "name": "Self-sufficient days"
+        "name": "Self-sufficient days (this year)"
       },
       "self_sufficiency_yesterday": {
         "name": "Self-sufficiency yesterday"
@@ -51,8 +51,14 @@
       "first_self_sufficient_day": {
         "name": "First self-sufficient day"
       },
+      "first_self_sufficient_day_prev_year": {
+        "name": "First self-sufficient day (previous year)"
+      },
       "last_self_sufficient_day": {
         "name": "Last self-sufficient day"
+      },
+      "last_self_sufficient_day_prev_year": {
+        "name": "Last self-sufficient day (previous year)"
       },
       "max_consecutive_days": {
         "name": "Max consecutive self-sufficient days"
@@ -60,14 +66,20 @@
       "solar_season_span": {
         "name": "Solar season length"
       },
+      "solar_season_span_prev_year": {
+        "name": "Solar season length (previous year)"
+      },
       "self_sufficient_pct_in_span": {
         "name": "Self-sufficient % of solar season"
       },
+      "self_sufficient_pct_in_span_prev_year": {
+        "name": "Self-sufficient % of solar season (previous year)"
+      },
       "battery_kwh_delivered": {
-        "name": "Battery energy delivered (solar season)"
+        "name": "Battery energy delivered (this year)"
       },
       "grid_export_kwh": {
-        "name": "Grid export during solar season"
+        "name": "Grid export (this year)"
       }
     }
   }

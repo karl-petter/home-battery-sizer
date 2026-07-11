@@ -12,15 +12,17 @@ For each simulated battery size you get:
 
 | Sensor | Description |
 | --- | --- |
-| Self-sufficient days | Days in the past year where solar + battery covered 100% of consumption |
+| Self-sufficient days (this year) | Days this calendar year where solar + battery covered 100% of consumption |
 | Self-sufficiency yesterday | Percentage of yesterday's consumption covered by solar + battery |
-| First self-sufficient day | First day of the solar season (spring) |
-| Last self-sufficient day | Last day of the solar season (autumn) |
-| Max consecutive self-sufficient days | Longest unbroken streak of fully self-sufficient days |
-| Solar season length | Calendar days between first and last self-sufficient day |
-| Self-sufficient % of solar season | Percentage of solar-season days that were fully self-sufficient |
-| Battery energy delivered | kWh the battery supplied to the house during the solar season |
-| Grid export during solar season | kWh still exported to the grid despite the battery (surplus that didn't fit) |
+| First self-sufficient day | First day of this year's solar season (spring) |
+| Last self-sufficient day | Last day of this year's solar season (autumn) |
+| Max consecutive self-sufficient days | Longest unbroken streak of fully self-sufficient days this year |
+| Solar season length | Calendar days between first and last self-sufficient day this year |
+| Self-sufficient % of solar season | Percentage of this year's solar-season days that were fully self-sufficient |
+| Battery energy delivered (this year) | kWh the battery supplied to the house this calendar year |
+| Grid export (this year) | kWh still exported to the grid despite the battery (surplus that didn't fit) |
+
+The season sensors (first/last day, season length, season %) also exist in a **previous year** variant, so you can compare a partial current year against the last complete season. All sensors are computed over calendar years — the same window for every battery size — so different sizes are always directly comparable.
 
 The battery carries charge between days, so a sunny day can power the house through the following night and into the next morning — just like a real battery would.
 
@@ -172,6 +174,45 @@ series:
   - entity: sensor.home_battery_sizer_30_kwh_self_sufficient_of_solar_season
     name: "30 kWh"
 ```
+
+### Card 4 — Daily production, consumption, export & battery coverage
+
+Combines actual solar production and grid export alongside simulated daily house consumption and the kWh each battery would deliver. House consumption includes solar used directly — it cannot be read from a grid meter alone. No extra integrations needed.
+
+Replace `sensor.your_solar_production_sensor` and `sensor.your_grid_export_sensor` with the sensor entity IDs you selected during integration setup.
+
+```yaml
+type: statistics-graph
+chart_type: bar
+title: Daily production, consumption, export & battery coverage
+days_to_show: 21
+period: day
+stat_types:
+  - change
+entities:
+  - entity: sensor.your_solar_production_sensor
+    name: Solar production
+  - entity: home_battery_sizer:consumption_daily
+    name: House consumption
+  - entity: sensor.your_grid_export_sensor
+    name: Grid export
+  - entity: home_battery_sizer:battery_delivered_daily_5kwh
+    name: Battery 5 kWh
+  - entity: home_battery_sizer:battery_delivered_daily_10kwh
+    name: Battery 10 kWh
+  - entity: home_battery_sizer:battery_delivered_daily_15kwh
+    name: Battery 15 kWh
+  - entity: home_battery_sizer:battery_delivered_daily_20kwh
+    name: Battery 20 kWh
+  - entity: home_battery_sizer:battery_delivered_daily_25kwh
+    name: Battery 25 kWh
+  - entity: home_battery_sizer:battery_delivered_daily_30kwh
+    name: Battery 30 kWh
+```
+
+Adjust the battery size series to match the sizes you have configured. On a sunny day with a small battery you will see high production, high export, and low battery coverage — larger batteries pull export down and battery coverage up.
+
+> **Note:** The visual editor will show validation warnings for the `home_battery_sizer:` entries — that is expected. Save via the YAML editor and the card will render correctly.
 
 ## How it works
 

@@ -41,13 +41,9 @@ def simulate_battery(
             "self_sufficient_days": 0,
             "self_sufficiency_yesterday": 0.0,
             "self_sufficiency_yesterday_date": None,
-            "first_self_sufficient_day": None,
-            "last_self_sufficient_day": None,
-            "max_consecutive_days": 0,
-            "span_days": 0,
-            "self_sufficient_pct_in_span": 0.0,
-            "battery_kwh_delivered": 0.0,
-            "grid_export_kwh": 0.0,
+            "current_year": None,
+            "previous_year": None,
+            "years": {},
             "daily_results": [],
         }
 
@@ -139,10 +135,37 @@ def simulate_battery(
     self_sufficiency_yesterday = last_complete["self_sufficiency_pct"] if last_complete else 0.0
     self_sufficiency_yesterday_date = last_complete["date"] if last_complete else None
 
-    # Longest consecutive streak of self-sufficient days
+    # Per-calendar-year season summaries. A Northern Hemisphere solar season sits
+    # inside one calendar year, so first/last self-sufficient day and span stay
+    # meaningful, and every battery size is summarised over the same windows —
+    # directly comparable.
+    days_by_year: dict[str, list[dict]] = {}
+    for day in daily_results:
+        days_by_year.setdefault(day["date"][:4], []).append(day)
+
+    years = {year: _year_summary(days) for year, days in days_by_year.items()}
+
+    current_year = daily_results[-1]["date"][:4]
+    previous_year = str(int(current_year) - 1)
+
+    return {
+        "self_sufficient_days": self_sufficient_days,
+        "self_sufficiency_yesterday": self_sufficiency_yesterday,
+        "self_sufficiency_yesterday_date": self_sufficiency_yesterday_date,
+        "current_year": current_year,
+        "previous_year": previous_year,
+        "years": years,
+        "daily_results": daily_results,
+    }
+
+
+def _year_summary(days: list[dict[str, Any]]) -> dict[str, Any]:
+    """Summarise one calendar year of daily simulation results."""
+    ss_days = [day["date"] for day in days if day["self_sufficient"]]
+
     max_consecutive_days = 0
     current_streak = 0
-    for day in daily_results:
+    for day in days:
         if day["self_sufficient"]:
             current_streak += 1
             if current_streak > max_consecutive_days:
@@ -150,51 +173,21 @@ def simulate_battery(
         else:
             current_streak = 0
 
-    # Solar-season span: restrict to a single calendar year so that first/last
-    # don't cross winter (e.g. May 2025 → April 2026 is meaningless as a season).
-    # Pick the year with the most self-sufficient days — the most complete season.
     span_days = 0
     self_sufficient_pct_in_span = 0.0
-    battery_kwh_delivered = 0.0
-    grid_export_kwh = 0.0
-    first_self_sufficient_day = None
-    last_self_sufficient_day = None
-
-    ss_days_by_year: dict[str, list[str]] = {}
-    for day in daily_results:
-        if day["self_sufficient"]:
-            year = day["date"][:4]
-            ss_days_by_year.setdefault(year, []).append(day["date"])
-
-    if ss_days_by_year:
-        best_year = max(ss_days_by_year, key=lambda y: len(ss_days_by_year[y]))
-        season_days = ss_days_by_year[best_year]  # already sorted (dates are ISO)
-        first_self_sufficient_day = season_days[0]
-        last_self_sufficient_day = season_days[-1]
-
-        first_date = date_type.fromisoformat(first_self_sufficient_day)
-        last_date = date_type.fromisoformat(last_self_sufficient_day)
+    if ss_days:
+        first_date = date_type.fromisoformat(ss_days[0])
+        last_date = date_type.fromisoformat(ss_days[-1])
         span_days = (last_date - first_date).days + 1
-        self_sufficient_pct_in_span = round(len(season_days) / span_days * 100, 1)
-
-        for day in daily_results:
-            if first_self_sufficient_day <= day["date"] <= last_self_sufficient_day:
-                battery_kwh_delivered += day["battery_kwh_delivered"]
-                grid_export_kwh += day["grid_export_kwh"]
-
-    battery_kwh_delivered = round(battery_kwh_delivered, 1)
-    grid_export_kwh = round(grid_export_kwh, 1)
+        self_sufficient_pct_in_span = round(len(ss_days) / span_days * 100, 1)
 
     return {
-        "self_sufficient_days": self_sufficient_days,
-        "self_sufficiency_yesterday": self_sufficiency_yesterday,
-        "self_sufficiency_yesterday_date": self_sufficiency_yesterday_date,
-        "first_self_sufficient_day": first_self_sufficient_day,
-        "last_self_sufficient_day": last_self_sufficient_day,
+        "self_sufficient_days": len(ss_days),
+        "first_self_sufficient_day": ss_days[0] if ss_days else None,
+        "last_self_sufficient_day": ss_days[-1] if ss_days else None,
         "max_consecutive_days": max_consecutive_days,
         "span_days": span_days,
         "self_sufficient_pct_in_span": self_sufficient_pct_in_span,
-        "battery_kwh_delivered": battery_kwh_delivered,
-        "grid_export_kwh": grid_export_kwh,
-        "daily_results": daily_results,
+        "battery_kwh_delivered": round(sum(d["battery_kwh_delivered"] for d in days), 1),
+        "grid_export_kwh": round(sum(d["grid_export_kwh"] for d in days), 1),
     }

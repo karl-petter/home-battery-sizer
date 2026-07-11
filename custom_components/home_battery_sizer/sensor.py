@@ -33,10 +33,14 @@ async def async_setup_entry(
             SelfSufficientDaysSensor(coordinator, entry),
             SelfSufficiencyYesterdaySensor(coordinator, entry),
             FirstSelfSufficientDaySensor(coordinator, entry),
+            FirstSelfSufficientDaySensor(coordinator, entry, previous_year=True),
             LastSelfSufficientDaySensor(coordinator, entry),
+            LastSelfSufficientDaySensor(coordinator, entry, previous_year=True),
             MaxConsecutiveSelfSufficientDaysSensor(coordinator, entry),
             SolarSeasonSpanSensor(coordinator, entry),
+            SolarSeasonSpanSensor(coordinator, entry, previous_year=True),
             SelfSufficientPctInSpanSensor(coordinator, entry),
+            SelfSufficientPctInSpanSensor(coordinator, entry, previous_year=True),
             BatteryKwhDeliveredSensor(coordinator, entry),
             GridExportKwhSensor(coordinator, entry),
         ]
@@ -67,23 +71,59 @@ class BatterySizerSensorBase(CoordinatorEntity):
         }
 
 
-class SelfSufficientDaysSensor(BatterySizerSensorBase, SensorEntity):
-    """Sensor for count of self-sufficient days."""
+class YearSummarySensorBase(BatterySizerSensorBase, SensorEntity):
+    """Base for sensors reading a per-calendar-year season summary.
 
-    _attr_translation_key = "self_sufficient_days"
+    All battery sizes summarise the same calendar year, so their values are
+    directly comparable. Instantiated once for the current year and once for
+    the previous year.
+    """
 
-    def __init__(self, coordinator, entry):
+    _base_key: str
+
+    def __init__(self, coordinator, entry, previous_year: bool = False):
         super().__init__(coordinator, entry)
-        self._attr_unique_id = f"home_battery_sizer_self_sufficient_days_{entry.entry_id}"
+        self._previous_year = previous_year
+        suffix = "_prev_year" if previous_year else ""
+        self._attr_translation_key = f"{self._base_key}{suffix}"
+        self._attr_unique_id = (
+            f"home_battery_sizer_{self._base_key}{suffix}_{entry.entry_id}"
+        )
+
+    @property
+    def _year(self) -> str | None:
+        """The calendar year this sensor reports on."""
+        if self.coordinator.data is None:
+            return None
+        key = "previous_year" if self._previous_year else "current_year"
+        return self.coordinator.data.get(key)
+
+    @property
+    def _summary(self) -> dict[str, Any] | None:
+        """The season summary for this sensor's year, or None if no data."""
+        if self.coordinator.data is None or self._year is None:
+            return None
+        return self.coordinator.data.get("years", {}).get(self._year)
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        return {"year": self._year}
+
+
+class SelfSufficientDaysSensor(YearSummarySensorBase):
+    """Count of self-sufficient days in the current calendar year."""
+
+    _base_key = "self_sufficient_days"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = "days"
 
     @property
     def native_value(self) -> int | None:
         """Return the value of the sensor."""
-        if self.coordinator.data is None:
+        summary = self._summary
+        if summary is None:
             return None
-        return self.coordinator.data.get("self_sufficient_days")
+        return summary.get("self_sufficient_days")
 
     @property
     def extra_state_attributes(self) -> dict:
@@ -91,7 +131,13 @@ class SelfSufficientDaysSensor(BatterySizerSensorBase, SensorEntity):
         if self.coordinator.data is None:
             return {}
         daily = self.coordinator.data.get("daily_results", [])
+        years = self.coordinator.data.get("years", {})
         return {
+            "year": self._year,
+            "days_per_year": {
+                year: summary["self_sufficient_days"]
+                for year, summary in sorted(years.items())
+            },
             "days_of_data": len(daily),
             "data_from": daily[0]["date"] if daily else None,
             "data_to": daily[-1]["date"] if daily else None,
@@ -123,155 +169,134 @@ class SelfSufficiencyYesterdaySensor(BatterySizerSensorBase, SensorEntity):
         return {"date": self.coordinator.data.get("self_sufficiency_yesterday_date")}
 
 
-class FirstSelfSufficientDaySensor(BatterySizerSensorBase, SensorEntity):
-    """Sensor for the first self-sufficient day in the past year."""
+class FirstSelfSufficientDaySensor(YearSummarySensorBase):
+    """Date of the first self-sufficient day in the year."""
 
-    _attr_translation_key = "first_self_sufficient_day"
-
-    def __init__(self, coordinator, entry):
-        super().__init__(coordinator, entry)
-        self._attr_unique_id = f"home_battery_sizer_first_self_sufficient_day_{entry.entry_id}"
+    _base_key = "first_self_sufficient_day"
     _attr_device_class = SensorDeviceClass.DATE
 
     @property
     def native_value(self):
         """Return the date of the first self-sufficient day."""
-        if self.coordinator.data is None:
+        summary = self._summary
+        if summary is None:
             return None
-        value = self.coordinator.data.get("first_self_sufficient_day")
+        value = summary.get("first_self_sufficient_day")
         if value is None:
             return None
         from datetime import date
         return date.fromisoformat(value)
 
 
-class LastSelfSufficientDaySensor(BatterySizerSensorBase, SensorEntity):
-    """Sensor for the most recent self-sufficient day in the past year."""
+class LastSelfSufficientDaySensor(YearSummarySensorBase):
+    """Date of the last self-sufficient day in the year."""
 
-    _attr_translation_key = "last_self_sufficient_day"
-
-    def __init__(self, coordinator, entry):
-        super().__init__(coordinator, entry)
-        self._attr_unique_id = f"home_battery_sizer_last_self_sufficient_day_{entry.entry_id}"
+    _base_key = "last_self_sufficient_day"
     _attr_device_class = SensorDeviceClass.DATE
 
     @property
     def native_value(self):
         """Return the date of the last self-sufficient day."""
-        if self.coordinator.data is None:
+        summary = self._summary
+        if summary is None:
             return None
-        value = self.coordinator.data.get("last_self_sufficient_day")
+        value = summary.get("last_self_sufficient_day")
         if value is None:
             return None
         from datetime import date
         return date.fromisoformat(value)
 
 
-class MaxConsecutiveSelfSufficientDaysSensor(BatterySizerSensorBase, SensorEntity):
-    """Sensor for the longest consecutive streak of self-sufficient days."""
+class MaxConsecutiveSelfSufficientDaysSensor(YearSummarySensorBase):
+    """Longest consecutive streak of self-sufficient days in the current year."""
 
-    _attr_translation_key = "max_consecutive_days"
+    _base_key = "max_consecutive_days"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = "days"
 
-    def __init__(self, coordinator, entry):
-        super().__init__(coordinator, entry)
-        self._attr_unique_id = f"home_battery_sizer_max_consecutive_days_{entry.entry_id}"
-
     @property
     def native_value(self) -> int | None:
-        if self.coordinator.data is None:
+        summary = self._summary
+        if summary is None:
             return None
-        return self.coordinator.data.get("max_consecutive_days")
+        return summary.get("max_consecutive_days")
 
 
-class SolarSeasonSpanSensor(BatterySizerSensorBase, SensorEntity):
-    """Calendar days between first and last self-sufficient day."""
+class SolarSeasonSpanSensor(YearSummarySensorBase):
+    """Calendar days between first and last self-sufficient day of the year."""
 
-    _attr_translation_key = "solar_season_span"
+    _base_key = "solar_season_span"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = "days"
 
-    def __init__(self, coordinator, entry):
-        super().__init__(coordinator, entry)
-        self._attr_unique_id = f"home_battery_sizer_solar_season_span_{entry.entry_id}"
-
     @property
     def native_value(self) -> int | None:
-        if self.coordinator.data is None:
+        summary = self._summary
+        if summary is None:
             return None
-        return self.coordinator.data.get("span_days")
+        return summary.get("span_days")
 
     @property
     def extra_state_attributes(self) -> dict:
-        if self.coordinator.data is None:
-            return {}
+        summary = self._summary or {}
         return {
-            "first_day": self.coordinator.data.get("first_self_sufficient_day"),
-            "last_day": self.coordinator.data.get("last_self_sufficient_day"),
+            "year": self._year,
+            "first_day": summary.get("first_self_sufficient_day"),
+            "last_day": summary.get("last_self_sufficient_day"),
         }
 
 
-class SelfSufficientPctInSpanSensor(BatterySizerSensorBase, SensorEntity):
+class SelfSufficientPctInSpanSensor(YearSummarySensorBase):
     """Percentage of solar-season days that were self-sufficient."""
 
-    _attr_translation_key = "self_sufficient_pct_in_span"
+    _base_key = "self_sufficient_pct_in_span"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = PERCENTAGE
 
-    def __init__(self, coordinator, entry):
-        super().__init__(coordinator, entry)
-        self._attr_unique_id = f"home_battery_sizer_self_sufficient_pct_in_span_{entry.entry_id}"
-
     @property
     def native_value(self) -> float | None:
-        if self.coordinator.data is None:
+        summary = self._summary
+        if summary is None:
             return None
-        return self.coordinator.data.get("self_sufficient_pct_in_span")
+        return summary.get("self_sufficient_pct_in_span")
 
     @property
     def extra_state_attributes(self) -> dict:
-        if self.coordinator.data is None:
-            return {}
+        summary = self._summary or {}
         return {
-            "self_sufficient_days": self.coordinator.data.get("self_sufficient_days"),
-            "span_days": self.coordinator.data.get("span_days"),
+            "year": self._year,
+            "self_sufficient_days": summary.get("self_sufficient_days"),
+            "span_days": summary.get("span_days"),
         }
 
 
-class BatteryKwhDeliveredSensor(BatterySizerSensorBase, SensorEntity):
-    """kWh the battery discharged into the house during the solar season."""
+class BatteryKwhDeliveredSensor(YearSummarySensorBase):
+    """kWh the battery discharged into the house during the current year."""
 
-    _attr_translation_key = "battery_kwh_delivered"
-    _attr_state_class = SensorStateClass.MEASUREMENT
+    _base_key = "battery_kwh_delivered"
+    _attr_state_class = SensorStateClass.TOTAL
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
 
-    def __init__(self, coordinator, entry):
-        super().__init__(coordinator, entry)
-        self._attr_unique_id = f"home_battery_sizer_battery_kwh_delivered_{entry.entry_id}"
-
     @property
     def native_value(self) -> float | None:
-        if self.coordinator.data is None:
+        summary = self._summary
+        if summary is None:
             return None
-        return self.coordinator.data.get("battery_kwh_delivered")
+        return summary.get("battery_kwh_delivered")
 
 
-class GridExportKwhSensor(BatterySizerSensorBase, SensorEntity):
-    """kWh exported to the grid during the solar season (surplus the battery couldn't store)."""
+class GridExportKwhSensor(YearSummarySensorBase):
+    """kWh exported to the grid during the current year (surplus the battery couldn't store)."""
 
-    _attr_translation_key = "grid_export_kwh"
-    _attr_state_class = SensorStateClass.MEASUREMENT
+    _base_key = "grid_export_kwh"
+    _attr_state_class = SensorStateClass.TOTAL
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
 
-    def __init__(self, coordinator, entry):
-        super().__init__(coordinator, entry)
-        self._attr_unique_id = f"home_battery_sizer_grid_export_kwh_{entry.entry_id}"
-
     @property
     def native_value(self) -> float | None:
-        if self.coordinator.data is None:
+        summary = self._summary
+        if summary is None:
             return None
-        return self.coordinator.data.get("grid_export_kwh")
+        return summary.get("grid_export_kwh")

@@ -46,6 +46,11 @@ class HomeBatterySizerCoordinator(DataUpdateCoordinator):
         self.min_soc_pct = min_soc_pct
         size_slug = f"{battery_size:g}".replace(".", "_")
         self.statistic_id = f"{DOMAIN}:self_sufficiency_daily_{size_slug}kwh"
+        self.battery_delivered_statistic_id = f"{DOMAIN}:battery_delivered_daily_{size_slug}kwh"
+        self.ss_days_statistic_id = f"{DOMAIN}:self_sufficient_days_{size_slug}kwh"
+        # Consumption doesn't vary by battery size — shared statistic ID.
+        self.consumption_statistic_id = f"{DOMAIN}:consumption_daily"
+        self._bd_metadata_checked = False
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from recorder and run simulation."""
@@ -55,7 +60,9 @@ class HomeBatterySizerCoordinator(DataUpdateCoordinator):
                 self.solar_sensor,
                 self.grid_import_sensor,
                 self.grid_export_sensor,
-                days=365,
+                # Two years back so the previous calendar year is fully covered
+                # for the per-year season sensors.
+                days=730,
             )
 
             result = simulate_battery(
@@ -83,13 +90,28 @@ class HomeBatterySizerCoordinator(DataUpdateCoordinator):
             return
 
         try:
+            from homeassistant.components.recorder import get_instance
             from homeassistant.components.recorder.statistics import (
                 async_add_external_statistics,
                 StatisticData,
                 StatisticMetaData,
                 StatisticMeanType,
             )
+            from homeassistant.components.recorder.tasks import ClearStatisticsTask
             from datetime import date, timedelta
+
+            if not self._bd_metadata_checked:
+                self._bd_metadata_checked = True
+                # Clear once per coordinator lifetime so stale mean-only metadata is
+                # removed and recreated correctly with has_sum=True below.
+                # queue_task is the async-safe way to enqueue recorder work in HA 2026.4.
+                get_instance(self.hass).queue_task(
+                    ClearStatisticsTask(
+                        on_done=None,
+                        statistic_ids=[self.battery_delivered_statistic_id],
+                    )
+                )
+                _LOGGER.info("Cleared %s for metadata migration", self.battery_delivered_statistic_id)
 
             metadata = StatisticMetaData(
                 has_mean=True,
@@ -101,27 +123,83 @@ class HomeBatterySizerCoordinator(DataUpdateCoordinator):
                 unit_of_measurement=PERCENTAGE,
             )
 
-            # Build a lookup of simulation results by date
-            results_by_date = {day["date"]: day.get("self_sufficiency_pct", 0.0) for day in daily_results}
+            # battery_delivered is sum-based (running cumulative total) so that
+            # stat_types: [change] works in statistics-graph alongside actual
+            # cumulative energy sensors. mean_type=NONE signals no mean is stored.
+            metadata_bd = StatisticMetaData(
+                has_mean=False,
+                has_sum=True,
+                mean_type=StatisticMeanType.NONE,
+                name=f"Battery sim: daily battery delivered ({self.battery_size:.0f} kWh)",
+                source=DOMAIN,
+                statistic_id=self.battery_delivered_statistic_id,
+                unit_of_measurement="kWh",
+                unit_class=None,
+            )
+
+            # Cumulative count of self-sufficient days. Sum-based so a statistics
+            # card with stat_types: [change] shows the count for any period the
+            # user selects (month, year, ...), Energy-dashboard style.
+            metadata_ss_days = StatisticMetaData(
+                has_mean=False,
+                has_sum=True,
+                mean_type=StatisticMeanType.NONE,
+                name=f"Battery sim: self-sufficient days ({self.battery_size:.0f} kWh)",
+                source=DOMAIN,
+                statistic_id=self.ss_days_statistic_id,
+                unit_of_measurement="days",
+                unit_class=None,
+            )
+
+            metadata_consumption = StatisticMetaData(
+                has_mean=False,
+                has_sum=True,
+                mean_type=StatisticMeanType.NONE,
+                name="Battery sim: daily house consumption",
+                source=DOMAIN,
+                statistic_id=self.consumption_statistic_id,
+                unit_of_measurement="kWh",
+                unit_class=None,
+            )
+
+            # Build lookups of simulation results by date
+            ss_by_date = {day["date"]: day.get("self_sufficiency_pct", 0.0) for day in daily_results}
+            bd_by_date = {day["date"]: day.get("battery_kwh_delivered", 0.0) for day in daily_results}
+            cons_by_date = {day["date"]: day.get("total_consumption", 0.0) for day in daily_results}
+            ss_flag_by_date = {day["date"]: day.get("self_sufficient", False) for day in daily_results}
 
             # Cover every calendar day from first to last date in range
             first_date = date.fromisoformat(daily_results[0]["date"])
             last_date = date.fromisoformat(daily_results[-1]["date"])
 
             stat_data = []
+            stat_data_bd = []
+            stat_data_cons = []
+            stat_data_ss_days = []
+            bd_cumsum = 0.0
+            cons_cumsum = 0.0
+            ss_days_cumsum = 0
             current = first_date
             while current <= last_date:
                 date_str = current.isoformat()
-                pct = results_by_date.get(date_str, 0.0)
                 start = datetime(current.year, current.month, current.day, tzinfo=timezone.utc)
-                stat_data.append(StatisticData(start=start, mean=pct))
+                stat_data.append(StatisticData(start=start, mean=ss_by_date.get(date_str, 0.0)))
+                bd_cumsum += bd_by_date.get(date_str, 0.0)
+                stat_data_bd.append(StatisticData(start=start, sum=round(bd_cumsum, 3)))
+                cons_cumsum += cons_by_date.get(date_str, 0.0)
+                stat_data_cons.append(StatisticData(start=start, sum=round(cons_cumsum, 3)))
+                if ss_flag_by_date.get(date_str, False):
+                    ss_days_cumsum += 1
+                stat_data_ss_days.append(StatisticData(start=start, sum=ss_days_cumsum))
                 current += timedelta(days=1)
 
             async_add_external_statistics(self.hass, metadata, stat_data)
+            async_add_external_statistics(self.hass, metadata_bd, stat_data_bd)
+            async_add_external_statistics(self.hass, metadata_consumption, stat_data_cons)
+            async_add_external_statistics(self.hass, metadata_ss_days, stat_data_ss_days)
             _LOGGER.info(
-                "Injected %d daily stats into %s (battery %.0f kWh)",
+                "Injected %d daily stats for battery %.0f kWh",
                 len(stat_data),
-                self.statistic_id,
                 self.battery_size,
             )
 
