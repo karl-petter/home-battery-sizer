@@ -112,9 +112,9 @@ Add a new card, switch to the YAML editor, and paste:
 
 ```yaml
 type: statistics-graph
-chart_type: bar
+chart_type: line
 title: Daily self-sufficiency
-days_to_show: 21
+days_to_show: 365
 stat_types:
   - mean
 unit: "%"
@@ -161,7 +161,7 @@ entities:
     name: 30 kWh
 ```
 
-Pick whichever reads best for you — daily for the recent detail, monthly for the year at a glance.
+Pick whichever reads best for you — daily lines show the day-to-day variation across the year, monthly bars the seasons at a glance.
 
 > **Note:** The visual editor will show validation warnings for these entries — that is expected. Save via the YAML editor and the card will render correctly.
 
