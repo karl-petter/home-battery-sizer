@@ -28,6 +28,8 @@ For each simulated battery size you get two groups of sensors. Entity IDs are `s
 | First self-sufficient day | `_first_self_sufficient_day` | First fully grid-free day of the year (spring) |
 | Last self-sufficient day | `_last_self_sufficient_day` | Most recent fully grid-free day of the year (autumn) |
 
+The two date sensors carry context dates as attributes — useful at high latitudes where panels are dark all winter: `first_solar_production_day` / `last_solar_production_day` (first/last day with meaningful production, > 0.1 kWh) and `first_solar_surplus_day` / `last_solar_surplus_day` (first/last day solar exceeded consumption, i.e. when a battery has something to store). Spring reads: production starts → surplus starts → fully grid-free; the gap between the last two is what a bigger battery shrinks.
+
 Every yearly sensor also exists in a **previous year** variant (append `_previous_year` to the entity ID), so a partial current year can be compared against the last complete one. All sensors are computed over calendar years — the same window for every battery size — and Energy self-sufficiency and the day counts can only improve with a bigger battery, so different sizes are always directly comparable.
 
 ### Derived numbers

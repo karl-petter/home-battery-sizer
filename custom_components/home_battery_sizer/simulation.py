@@ -56,6 +56,7 @@ def simulate_battery(
     daily_consumption: dict[str, float] = defaultdict(float)
     daily_battery_delivered: dict[str, float] = defaultdict(float)
     daily_grid_export: dict[str, float] = defaultdict(float)
+    daily_surplus: dict[str, float] = defaultdict(float)
 
     for hour in hourly_data:
         date = hour["date"]
@@ -76,6 +77,7 @@ def simulate_battery(
             # Charging draws stored/efficiency from the surplus; the rest is
             # simulated export — surplus that didn't fit in the battery.
             sim_export = max(0.0, surplus - stored / BATTERY_EFFICIENCY)
+            daily_surplus[date] += surplus
             grid_needed = 0.0
             discharge = 0.0
         else:
@@ -122,6 +124,7 @@ def simulate_battery(
             "grid_import_needed": round(grid_needed, 3),
             "battery_kwh_delivered": round(daily_battery_delivered[date], 3),
             "grid_export_kwh": round(daily_grid_export[date], 3),
+            "solar_surplus_kwh": round(daily_surplus[date], 3),
             "self_sufficient": is_self_sufficient,
             "self_sufficiency_pct": ss_pct,
         })
@@ -189,6 +192,12 @@ def _year_summary(days: list[dict[str, Any]]) -> dict[str, Any]:
     else:
         energy_self_sufficiency_pct = 100.0
 
+    # Context dates for high latitudes where panels are dark all winter:
+    # when production wakes up, and when there is first surplus to store.
+    # 0.1 kWh/day threshold so a stray winter blip doesn't count as a day.
+    solar_days = [d["date"] for d in days if d["solar_production"] > 0.1]
+    surplus_days = [d["date"] for d in days if d.get("solar_surplus_kwh", 0.0) > 0.1]
+
     return {
         "self_sufficient_days": len(ss_days),
         "days_with_data": len(days),
@@ -197,6 +206,10 @@ def _year_summary(days: list[dict[str, Any]]) -> dict[str, Any]:
         "grid_import_kwh": round(grid_import_kwh, 1),
         "first_self_sufficient_day": ss_days[0] if ss_days else None,
         "last_self_sufficient_day": ss_days[-1] if ss_days else None,
+        "first_solar_production_day": solar_days[0] if solar_days else None,
+        "last_solar_production_day": solar_days[-1] if solar_days else None,
+        "first_solar_surplus_day": surplus_days[0] if surplus_days else None,
+        "last_solar_surplus_day": surplus_days[-1] if surplus_days else None,
         "max_consecutive_days": max_consecutive_days,
         "battery_kwh_delivered": round(sum(d["battery_kwh_delivered"] for d in days), 1),
         "grid_export_kwh": round(sum(d["grid_export_kwh"] for d in days), 1),

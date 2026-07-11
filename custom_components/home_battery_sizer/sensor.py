@@ -190,6 +190,15 @@ class FirstSelfSufficientDaySensor(YearSummarySensorBase):
         from datetime import date
         return date.fromisoformat(value)
 
+    @property
+    def extra_state_attributes(self) -> dict:
+        summary = self._summary or {}
+        return {
+            "year": self._year,
+            "first_solar_production_day": summary.get("first_solar_production_day"),
+            "first_solar_surplus_day": summary.get("first_solar_surplus_day"),
+        }
+
 
 class LastSelfSufficientDaySensor(YearSummarySensorBase):
     """Date of the last self-sufficient day in the year."""
@@ -208,6 +217,15 @@ class LastSelfSufficientDaySensor(YearSummarySensorBase):
             return None
         from datetime import date
         return date.fromisoformat(value)
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        summary = self._summary or {}
+        return {
+            "year": self._year,
+            "last_solar_production_day": summary.get("last_solar_production_day"),
+            "last_solar_surplus_day": summary.get("last_solar_surplus_day"),
+        }
 
 
 class MaxConsecutiveSelfSufficientDaysSensor(YearSummarySensorBase):
