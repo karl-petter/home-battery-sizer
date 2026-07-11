@@ -48,8 +48,9 @@ class HomeBatterySizerCoordinator(DataUpdateCoordinator):
         self.statistic_id = f"{DOMAIN}:self_sufficiency_daily_{size_slug}kwh"
         self.battery_delivered_statistic_id = f"{DOMAIN}:battery_delivered_daily_{size_slug}kwh"
         self.ss_days_statistic_id = f"{DOMAIN}:self_sufficient_days_{size_slug}kwh"
-        # Consumption doesn't vary by battery size — shared statistic ID.
+        # Consumption and direct solar use don't vary by battery size — shared statistic IDs.
         self.consumption_statistic_id = f"{DOMAIN}:consumption_daily"
+        self.direct_use_statistic_id = f"{DOMAIN}:solar_direct_use_daily"
         self._bd_metadata_checked = False
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -162,11 +163,29 @@ class HomeBatterySizerCoordinator(DataUpdateCoordinator):
                 unit_class=None,
             )
 
+            # Solar consumed directly (production minus surplus) — battery-
+            # independent, shared across entries. Enables stacked "where does
+            # the production go" cards: direct use + battery delivered + export.
+            metadata_direct = StatisticMetaData(
+                has_mean=False,
+                has_sum=True,
+                mean_type=StatisticMeanType.NONE,
+                name="Battery sim: daily solar direct use",
+                source=DOMAIN,
+                statistic_id=self.direct_use_statistic_id,
+                unit_of_measurement="kWh",
+                unit_class=None,
+            )
+
             # Build lookups of simulation results by date
             ss_by_date = {day["date"]: day.get("self_sufficiency_pct", 0.0) for day in daily_results}
             bd_by_date = {day["date"]: day.get("battery_kwh_delivered", 0.0) for day in daily_results}
             cons_by_date = {day["date"]: day.get("total_consumption", 0.0) for day in daily_results}
             ss_flag_by_date = {day["date"]: day.get("self_sufficient", False) for day in daily_results}
+            direct_by_date = {
+                day["date"]: max(0.0, day.get("solar_production", 0.0) - day.get("solar_surplus_kwh", 0.0))
+                for day in daily_results
+            }
 
             # Cover every calendar day from first to last date in range
             first_date = date.fromisoformat(daily_results[0]["date"])
@@ -176,9 +195,11 @@ class HomeBatterySizerCoordinator(DataUpdateCoordinator):
             stat_data_bd = []
             stat_data_cons = []
             stat_data_ss_days = []
+            stat_data_direct = []
             bd_cumsum = 0.0
             cons_cumsum = 0.0
             ss_days_cumsum = 0
+            direct_cumsum = 0.0
             current = first_date
             while current <= last_date:
                 date_str = current.isoformat()
@@ -191,12 +212,15 @@ class HomeBatterySizerCoordinator(DataUpdateCoordinator):
                 if ss_flag_by_date.get(date_str, False):
                     ss_days_cumsum += 1
                 stat_data_ss_days.append(StatisticData(start=start, sum=ss_days_cumsum))
+                direct_cumsum += direct_by_date.get(date_str, 0.0)
+                stat_data_direct.append(StatisticData(start=start, sum=round(direct_cumsum, 3)))
                 current += timedelta(days=1)
 
             async_add_external_statistics(self.hass, metadata, stat_data)
             async_add_external_statistics(self.hass, metadata_bd, stat_data_bd)
             async_add_external_statistics(self.hass, metadata_consumption, stat_data_cons)
             async_add_external_statistics(self.hass, metadata_ss_days, stat_data_ss_days)
+            async_add_external_statistics(self.hass, metadata_direct, stat_data_direct)
             _LOGGER.info(
                 "Injected %d daily stats for battery %.0f kWh",
                 len(stat_data),

@@ -139,23 +139,23 @@ Adjust the list to match the battery sizes you have configured. The statistic ID
 
 ### Card 2 — Battery size comparison (current values)
 
-Shows this year's energy self-sufficiency for each battery size as a list — the share of yearly consumption covered by solar + battery. No extra integrations needed.
+Shows the previous year's energy self-sufficiency for each battery size as a list — the share of yearly consumption covered by solar + battery. The previous year is used because it is complete; early in a year the current-year values say little. No extra integrations needed.
 
 ```yaml
 type: entities
-title: Energy self-sufficiency (this year)
+title: Energy self-sufficiency (previous year)
 entities:
-  - entity: sensor.home_battery_sizer_5_kwh_energy_self_sufficiency
+  - entity: sensor.home_battery_sizer_5_kwh_energy_self_sufficiency_previous_year
     name: 5 kWh
-  - entity: sensor.home_battery_sizer_10_kwh_energy_self_sufficiency
+  - entity: sensor.home_battery_sizer_10_kwh_energy_self_sufficiency_previous_year
     name: 10 kWh
-  - entity: sensor.home_battery_sizer_15_kwh_energy_self_sufficiency
+  - entity: sensor.home_battery_sizer_15_kwh_energy_self_sufficiency_previous_year
     name: 15 kWh
-  - entity: sensor.home_battery_sizer_20_kwh_energy_self_sufficiency
+  - entity: sensor.home_battery_sizer_20_kwh_energy_self_sufficiency_previous_year
     name: 20 kWh
-  - entity: sensor.home_battery_sizer_25_kwh_energy_self_sufficiency
+  - entity: sensor.home_battery_sizer_25_kwh_energy_self_sufficiency_previous_year
     name: 25 kWh
-  - entity: sensor.home_battery_sizer_30_kwh_energy_self_sufficiency
+  - entity: sensor.home_battery_sizer_30_kwh_energy_self_sufficiency_previous_year
     name: 30 kWh
 ```
 
@@ -168,7 +168,7 @@ type: custom:apexcharts-card
 graph_span: 2h
 header:
   show: true
-  title: Battery size vs energy self-sufficiency
+  title: Battery size vs energy self-sufficiency (previous year)
 apex_config:
   chart:
     type: bar
@@ -198,17 +198,17 @@ all_series_config:
   show:
     legend_value: true
 series:
-  - entity: sensor.home_battery_sizer_5_kwh_energy_self_sufficiency
+  - entity: sensor.home_battery_sizer_5_kwh_energy_self_sufficiency_previous_year
     name: "5 kWh"
-  - entity: sensor.home_battery_sizer_10_kwh_energy_self_sufficiency
+  - entity: sensor.home_battery_sizer_10_kwh_energy_self_sufficiency_previous_year
     name: "10 kWh"
-  - entity: sensor.home_battery_sizer_15_kwh_energy_self_sufficiency
+  - entity: sensor.home_battery_sizer_15_kwh_energy_self_sufficiency_previous_year
     name: "15 kWh"
-  - entity: sensor.home_battery_sizer_20_kwh_energy_self_sufficiency
+  - entity: sensor.home_battery_sizer_20_kwh_energy_self_sufficiency_previous_year
     name: "20 kWh"
-  - entity: sensor.home_battery_sizer_25_kwh_energy_self_sufficiency
+  - entity: sensor.home_battery_sizer_25_kwh_energy_self_sufficiency_previous_year
     name: "25 kWh"
-  - entity: sensor.home_battery_sizer_30_kwh_energy_self_sufficiency
+  - entity: sensor.home_battery_sizer_30_kwh_energy_self_sufficiency_previous_year
     name: "30 kWh"
 ```
 
@@ -253,39 +253,78 @@ Adjust the battery size series to match the sizes you have configured. On a sunn
 
 ### Card 5 — Solar year milestones
 
-Shows the spring sequence for one battery size: when the panels wake up, when there is first surplus to store, and from when the house is fully grid-free. The first two dates are attributes on the date sensors (see the Calendar sensor table), displayed with core `attribute` rows — no extra integrations needed.
+Shows the previous (complete) year's sequence for one battery size: when the panels wake up, when there is first surplus to store, from when to when the house is fully grid-free, and how the year winds down. The first two dates are attributes on the date sensors (see the Calendar sensor table), displayed with core `attribute` rows — no extra integrations needed.
 
 ```yaml
 type: entities
-title: Solar year milestones (20 kWh)
+title: Solar year milestones (20 kWh, previous year)
 entities:
-  - entity: sensor.home_battery_sizer_20_kwh_first_self_sufficient_day
+  - entity: sensor.home_battery_sizer_20_kwh_first_self_sufficient_day_previous_year
     type: attribute
     attribute: first_solar_production_day
     name: Production starts
     icon: mdi:white-balance-sunny
-  - entity: sensor.home_battery_sizer_20_kwh_first_self_sufficient_day
+  - entity: sensor.home_battery_sizer_20_kwh_first_self_sufficient_day_previous_year
     type: attribute
     attribute: first_solar_surplus_day
     name: First surplus to store
     icon: mdi:battery-plus
-  - entity: sensor.home_battery_sizer_20_kwh_first_self_sufficient_day
+  - entity: sensor.home_battery_sizer_20_kwh_first_self_sufficient_day_previous_year
     name: Fully grid-free from
-  - entity: sensor.home_battery_sizer_20_kwh_last_self_sufficient_day
+  - entity: sensor.home_battery_sizer_20_kwh_last_self_sufficient_day_previous_year
     name: Fully grid-free until
-  - entity: sensor.home_battery_sizer_20_kwh_last_self_sufficient_day
+  - entity: sensor.home_battery_sizer_20_kwh_last_self_sufficient_day_previous_year
     type: attribute
     attribute: last_solar_surplus_day
     name: Last surplus to store
     icon: mdi:battery-minus
-  - entity: sensor.home_battery_sizer_20_kwh_last_self_sufficient_day
+  - entity: sensor.home_battery_sizer_20_kwh_last_self_sufficient_day_previous_year
     type: attribute
     attribute: last_solar_production_day
     name: Production ends
     icon: mdi:weather-sunset-down
 ```
 
-Add the `_previous_year` variants of the same sensors to see the last complete year instead of the running one.
+Drop the `_previous_year` suffixes to follow the current year as it unfolds instead.
+
+### Card 6 — Where does the production go? (stacked)
+
+Splits each day's solar production into what the house consumed directly and what it consumed via the simulated battery — the rest of the production bar is surplus that would still be exported (or lost to charging efficiency). The core statistics-graph card cannot stack bars, so this uses [apexcharts-card](https://github.com/RomRider/apexcharts-card).
+
+Replace `sensor.your_solar_production_sensor` with your solar sensor. If its statistics are recorded in Wh rather than kWh, uncomment the `transform` line.
+
+```yaml
+type: custom:apexcharts-card
+graph_span: 21d
+header:
+  show: true
+  title: Where does the production go? (20 kWh)
+apex_config:
+  chart:
+    stacked: true
+series:
+  - entity: home_battery_sizer:solar_direct_use_daily
+    name: Consumed directly
+    type: column
+    statistics:
+      type: change
+      period: day
+  - entity: home_battery_sizer:battery_delivered_daily_20kwh
+    name: Consumed via battery
+    type: column
+    statistics:
+      type: change
+      period: day
+  - entity: sensor.your_solar_production_sensor
+    name: Production
+    type: line
+    # transform: "return x / 1000;"
+    statistics:
+      type: change
+      period: day
+```
+
+The gap between the production line and the top of the stacked bar is the energy this battery size fails to capture — watching that gap shrink (or not) as you compare sizes is the whole sizing question in one picture.
 
 ## How it works
 
