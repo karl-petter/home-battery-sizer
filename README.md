@@ -140,7 +140,7 @@ Adjust the list to match the battery sizes you have configured. The statistic ID
 ```yaml
 type: statistics-graph
 chart_type: bar
-title: Monthly self-sufficiency per battery size
+title: Monthly self-sufficiency
 days_to_show: 365
 period: month
 stat_types:
