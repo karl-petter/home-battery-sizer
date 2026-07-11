@@ -15,14 +15,38 @@
   },
   "entity": {
     "sensor": {
+      "battery_kwh_delivered": {
+        "name": "Battery discharge"
+      },
+      "battery_kwh_delivered_prev_year": {
+        "name": "Battery discharge (previous year)"
+      },
+      "grid_export_kwh": {
+        "name": "Battery grid export (simulated)"
+      },
+      "grid_export_kwh_prev_year": {
+        "name": "Battery grid export (simulated, previous year)"
+      },
+      "energy_self_sufficiency": {
+        "name": "Energy self-sufficiency"
+      },
+      "energy_self_sufficiency_prev_year": {
+        "name": "Energy self-sufficiency (previous year)"
+      },
+      "self_sufficiency_yesterday": {
+        "name": "Energy self-sufficiency yesterday"
+      },
       "self_sufficient_days": {
-        "name": "Self-sufficient days (this year)"
+        "name": "Self-sufficient days"
       },
       "self_sufficient_days_prev_year": {
         "name": "Self-sufficient days (previous year)"
       },
-      "self_sufficiency_yesterday": {
-        "name": "Self-sufficiency yesterday"
+      "max_consecutive_days": {
+        "name": "Max consecutive self-sufficient days"
+      },
+      "max_consecutive_days_prev_year": {
+        "name": "Max consecutive self-sufficient days (previous year)"
       },
       "first_self_sufficient_day": {
         "name": "First self-sufficient day"
@@ -35,39 +59,6 @@
       },
       "last_self_sufficient_day_prev_year": {
         "name": "Last self-sufficient day (previous year)"
-      },
-      "max_consecutive_days": {
-        "name": "Max consecutive self-sufficient days"
-      },
-      "solar_season_span": {
-        "name": "Solar season length"
-      },
-      "solar_season_span_prev_year": {
-        "name": "Solar season length (previous year)"
-      },
-      "self_sufficient_pct_in_span": {
-        "name": "Self-sufficient % of solar season"
-      },
-      "self_sufficient_pct_in_span_prev_year": {
-        "name": "Self-sufficient % of solar season (previous year)"
-      },
-      "year_self_sufficient_share": {
-        "name": "Share of year self-sufficient"
-      },
-      "year_self_sufficient_share_prev_year": {
-        "name": "Share of year self-sufficient (previous year)"
-      },
-      "energy_self_sufficiency": {
-        "name": "Energy self-sufficiency"
-      },
-      "energy_self_sufficiency_prev_year": {
-        "name": "Energy self-sufficiency (previous year)"
-      },
-      "battery_kwh_delivered": {
-        "name": "Battery energy delivered (this year)"
-      },
-      "grid_export_kwh": {
-        "name": "Simulated grid export (this year)"
       }
     }
   }

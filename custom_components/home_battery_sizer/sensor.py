@@ -38,16 +38,13 @@ async def async_setup_entry(
             LastSelfSufficientDaySensor(coordinator, entry),
             LastSelfSufficientDaySensor(coordinator, entry, previous_year=True),
             MaxConsecutiveSelfSufficientDaysSensor(coordinator, entry),
-            SolarSeasonSpanSensor(coordinator, entry),
-            SolarSeasonSpanSensor(coordinator, entry, previous_year=True),
-            SelfSufficientPctInSpanSensor(coordinator, entry),
-            SelfSufficientPctInSpanSensor(coordinator, entry, previous_year=True),
-            YearSelfSufficientShareSensor(coordinator, entry),
-            YearSelfSufficientShareSensor(coordinator, entry, previous_year=True),
+            MaxConsecutiveSelfSufficientDaysSensor(coordinator, entry, previous_year=True),
             EnergySelfSufficiencySensor(coordinator, entry),
             EnergySelfSufficiencySensor(coordinator, entry, previous_year=True),
             BatteryKwhDeliveredSensor(coordinator, entry),
+            BatteryKwhDeliveredSensor(coordinator, entry, previous_year=True),
             GridExportKwhSensor(coordinator, entry),
+            GridExportKwhSensor(coordinator, entry, previous_year=True),
         ]
     )
 
@@ -143,6 +140,7 @@ class SelfSufficientDaysSensor(YearSummarySensorBase):
                 year: summary["self_sufficient_days"]
                 for year, summary in sorted(years.items())
             },
+            "days_with_data": (self._summary or {}).get("days_with_data"),
             "days_of_data": len(daily),
             "data_from": daily[0]["date"] if daily else None,
             "data_to": daily[-1]["date"] if daily else None,
@@ -225,78 +223,6 @@ class MaxConsecutiveSelfSufficientDaysSensor(YearSummarySensorBase):
         if summary is None:
             return None
         return summary.get("max_consecutive_days")
-
-
-class SolarSeasonSpanSensor(YearSummarySensorBase):
-    """Calendar days between first and last self-sufficient day of the year."""
-
-    _base_key = "solar_season_span"
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = "days"
-
-    @property
-    def native_value(self) -> int | None:
-        summary = self._summary
-        if summary is None:
-            return None
-        return summary.get("span_days")
-
-    @property
-    def extra_state_attributes(self) -> dict:
-        summary = self._summary or {}
-        return {
-            "year": self._year,
-            "first_day": summary.get("first_self_sufficient_day"),
-            "last_day": summary.get("last_self_sufficient_day"),
-        }
-
-
-class SelfSufficientPctInSpanSensor(YearSummarySensorBase):
-    """Percentage of solar-season days that were self-sufficient."""
-
-    _base_key = "self_sufficient_pct_in_span"
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = PERCENTAGE
-
-    @property
-    def native_value(self) -> float | None:
-        summary = self._summary
-        if summary is None:
-            return None
-        return summary.get("self_sufficient_pct_in_span")
-
-    @property
-    def extra_state_attributes(self) -> dict:
-        summary = self._summary or {}
-        return {
-            "year": self._year,
-            "self_sufficient_days": summary.get("self_sufficient_days"),
-            "span_days": summary.get("span_days"),
-        }
-
-
-class YearSelfSufficientShareSensor(YearSummarySensorBase):
-    """Share of the year's days (with data) that were 100% self-sufficient."""
-
-    _base_key = "year_self_sufficient_share"
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = PERCENTAGE
-
-    @property
-    def native_value(self) -> float | None:
-        summary = self._summary
-        if summary is None:
-            return None
-        return summary.get("year_self_sufficient_share")
-
-    @property
-    def extra_state_attributes(self) -> dict:
-        summary = self._summary or {}
-        return {
-            "year": self._year,
-            "self_sufficient_days": summary.get("self_sufficient_days"),
-            "days_with_data": summary.get("days_with_data"),
-        }
 
 
 class EnergySelfSufficiencySensor(YearSummarySensorBase):

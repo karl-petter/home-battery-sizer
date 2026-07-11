@@ -8,25 +8,56 @@ If you have solar panels, you're probably exporting surplus energy to the grid d
 
 This integration answers that question using your own historical data. Add one entry per battery size you want to compare (e.g. 5, 10, 15, 20 kWh) and watch the sensors update side by side.
 
-For each simulated battery size you get:
+For each simulated battery size you get two groups of sensors. Entity IDs are `sensor.home_battery_sizer_{size}_kwh` plus the suffix below. (Entity IDs are fixed when an entity is first created — installs from older versions keep their original IDs; rename them under Settings → Entities if you want them to match.)
 
-| Sensor | Description |
-| --- | --- |
-| Self-sufficient days (this year) | Days this calendar year where solar + battery covered 100% of consumption |
-| Self-sufficiency yesterday | Percentage of yesterday's consumption covered by solar + battery |
-| First self-sufficient day | First day of this year's solar season (spring) |
-| Last self-sufficient day | Last day of this year's solar season (autumn) |
-| Max consecutive self-sufficient days | Longest unbroken streak of fully self-sufficient days this year |
-| Solar season length | Calendar days between first and last self-sufficient day this year |
-| Self-sufficient % of solar season | Percentage of this year's solar-season days that were fully self-sufficient |
-| Battery energy delivered (this year) | kWh the battery supplied to the house this calendar year |
-| Simulated grid export (this year) | kWh you would still have exported with this battery in place (surplus that didn't fit) — compare with your real export to see what the battery would absorb |
-| Energy self-sufficiency | Share of the year's consumption covered by solar + battery — **the headline number for comparing sizes** |
-| Share of year self-sufficient | Share of the year's days that were 100% self-sufficient |
+**Battery activity & energy** — what the battery does and how much of your consumption it covers:
 
-The season sensors (first/last day, season length, season %), the self-sufficient days count, and the two yearly self-sufficiency sensors also exist in a **previous year** variant, so you can compare a partial current year against the last complete season. All sensors are computed over calendar years — the same window for every battery size — so different sizes are always directly comparable.
+| Sensor | Entity ID suffix | Description |
+| --- | --- | --- |
+| Energy self-sufficiency | `_energy_self_sufficiency` | Share of the year's consumption covered by solar + battery — **the headline number for comparing sizes** |
+| Energy self-sufficiency yesterday | `_energy_self_sufficiency_yesterday` | Share of yesterday's consumption covered by solar + battery |
+| Battery discharge | `_battery_discharge` | kWh the battery supplied to the house this year |
+| Battery grid export (simulated) | `_battery_grid_export_simulated` | kWh you would still have exported (surplus that didn't fit in the battery) — compare with your real export to see what the battery would absorb |
 
-When comparing battery sizes, use **Energy self-sufficiency** (or the self-sufficient day counts): these can only improve with a bigger battery. "Self-sufficient % of solar season" describes the *shape* of each battery's own season and is not monotonic in battery size — a bigger battery can start its season earlier, which lengthens the season and can lower the percentage.
+**Calendar** — how many days, and when in the year, you'd be fully grid-free:
+
+| Sensor | Entity ID suffix | Description |
+| --- | --- | --- |
+| Self-sufficient days | `_self_sufficient_days` | Days this year where solar + battery covered 100% of consumption |
+| Max consecutive self-sufficient days | `_max_consecutive_self_sufficient_days` | Longest unbroken grid-free streak this year |
+| First self-sufficient day | `_first_self_sufficient_day` | First fully grid-free day of the year (spring) |
+| Last self-sufficient day | `_last_self_sufficient_day` | Most recent fully grid-free day of the year (autumn) |
+
+Every yearly sensor also exists in a **previous year** variant (append `_previous_year` to the entity ID), so a partial current year can be compared against the last complete one. All sensors are computed over calendar years — the same window for every battery size — and Energy self-sufficiency and the day counts can only improve with a bigger battery, so different sizes are always directly comparable.
+
+### Derived numbers
+
+A few ratios are deliberately *not* sensors, because they are one-line calculations on the sensors above. Paste these into a markdown card, or create a [template sensor helper](https://www.home-assistant.io/integrations/template/) if you want history (replace `20_kwh` with your battery size):
+
+Self-sufficient period length — days from first to last self-sufficient day, inclusive:
+
+```jinja
+{{ (states('sensor.home_battery_sizer_20_kwh_last_self_sufficient_day') | as_datetime
+  - states('sensor.home_battery_sizer_20_kwh_first_self_sufficient_day') | as_datetime).days + 1 }}
+```
+
+Share of that period that was fully self-sufficient:
+
+```jinja
+{% set first = states('sensor.home_battery_sizer_20_kwh_first_self_sufficient_day') | as_datetime %}
+{% set last  = states('sensor.home_battery_sizer_20_kwh_last_self_sufficient_day') | as_datetime %}
+{% set days  = states('sensor.home_battery_sizer_20_kwh_self_sufficient_days') | int %}
+{{ (100 * days / ((last - first).days + 1)) | round(1) }}
+```
+
+Share of the year so far that was fully self-sufficient:
+
+```jinja
+{{ (100 * states('sensor.home_battery_sizer_20_kwh_self_sufficient_days') | int
+       / now().timetuple().tm_yday) | round(1) }}
+```
+
+(If your recorded history does not cover the whole year, divide by the `days_with_data` attribute of the days sensor instead of the day-of-year.)
 
 The battery carries charge between days, so a sunny day can power the house through the following night and into the next morning — just like a real battery would.
 

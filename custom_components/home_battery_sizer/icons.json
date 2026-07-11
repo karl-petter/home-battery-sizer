@@ -1,50 +1,17 @@
 {
   "entity": {
     "sensor": {
-      "self_sufficient_days": {
-        "default": "mdi:calendar-check"
-      },
-      "self_sufficiency_yesterday": {
-        "default": "mdi:percent-circle-outline"
-      },
-      "first_self_sufficient_day": {
-        "default": "mdi:calendar-arrow-right"
-      },
-      "last_self_sufficient_day": {
-        "default": "mdi:calendar-arrow-left"
-      },
-      "max_consecutive_days": {
-        "default": "mdi:calendar-multiple-check"
-      },
-      "solar_season_span": {
-        "default": "mdi:weather-sunny"
-      },
-      "self_sufficient_pct_in_span": {
-        "default": "mdi:percent-circle"
-      },
       "battery_kwh_delivered": {
+        "default": "mdi:battery-charging"
+      },
+      "battery_kwh_delivered_prev_year": {
         "default": "mdi:battery-charging"
       },
       "grid_export_kwh": {
         "default": "mdi:transmission-tower-export"
       },
-      "first_self_sufficient_day_prev_year": {
-        "default": "mdi:calendar-arrow-right"
-      },
-      "last_self_sufficient_day_prev_year": {
-        "default": "mdi:calendar-arrow-left"
-      },
-      "solar_season_span_prev_year": {
-        "default": "mdi:weather-sunny"
-      },
-      "self_sufficient_pct_in_span_prev_year": {
-        "default": "mdi:percent-circle"
-      },
-      "year_self_sufficient_share": {
-        "default": "mdi:calendar-percent"
-      },
-      "year_self_sufficient_share_prev_year": {
-        "default": "mdi:calendar-percent"
+      "grid_export_kwh_prev_year": {
+        "default": "mdi:transmission-tower-export"
       },
       "energy_self_sufficiency": {
         "default": "mdi:home-percent"
@@ -52,8 +19,32 @@
       "energy_self_sufficiency_prev_year": {
         "default": "mdi:home-percent"
       },
+      "self_sufficiency_yesterday": {
+        "default": "mdi:percent-circle-outline"
+      },
+      "self_sufficient_days": {
+        "default": "mdi:calendar-check"
+      },
       "self_sufficient_days_prev_year": {
         "default": "mdi:calendar-check"
+      },
+      "max_consecutive_days": {
+        "default": "mdi:calendar-multiple-check"
+      },
+      "max_consecutive_days_prev_year": {
+        "default": "mdi:calendar-multiple-check"
+      },
+      "first_self_sufficient_day": {
+        "default": "mdi:calendar-arrow-right"
+      },
+      "first_self_sufficient_day_prev_year": {
+        "default": "mdi:calendar-arrow-right"
+      },
+      "last_self_sufficient_day": {
+        "default": "mdi:calendar-arrow-left"
+      },
+      "last_self_sufficient_day_prev_year": {
+        "default": "mdi:calendar-arrow-left"
       }
     }
   }

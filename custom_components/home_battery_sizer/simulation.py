@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from datetime import date as date_type
 from typing import Any
 
 from .const import BATTERY_EFFICIENCY
@@ -179,19 +178,6 @@ def _year_summary(days: list[dict[str, Any]]) -> dict[str, Any]:
         else:
             current_streak = 0
 
-    span_days = 0
-    self_sufficient_pct_in_span = 0.0
-    if ss_days:
-        first_date = date_type.fromisoformat(ss_days[0])
-        last_date = date_type.fromisoformat(ss_days[-1])
-        span_days = (last_date - first_date).days + 1
-        self_sufficient_pct_in_span = round(len(ss_days) / span_days * 100, 1)
-
-    # Share of days with data that were 100% self-sufficient. Days-with-data as
-    # denominator so a partial current year (or partial sensor history) compares
-    # honestly against a full year; equals days-in-year when coverage is full.
-    year_self_sufficient_share = round(len(ss_days) / len(days) * 100, 1)
-
     # Energy-based self-sufficiency: share of the year's consumption covered by
     # solar + battery. Monotone in battery size — the headline sizing metric.
     consumption_kwh = sum(d["total_consumption"] for d in days)
@@ -206,15 +192,12 @@ def _year_summary(days: list[dict[str, Any]]) -> dict[str, Any]:
     return {
         "self_sufficient_days": len(ss_days),
         "days_with_data": len(days),
-        "year_self_sufficient_share": year_self_sufficient_share,
         "energy_self_sufficiency_pct": energy_self_sufficiency_pct,
         "consumption_kwh": round(consumption_kwh, 1),
         "grid_import_kwh": round(grid_import_kwh, 1),
         "first_self_sufficient_day": ss_days[0] if ss_days else None,
         "last_self_sufficient_day": ss_days[-1] if ss_days else None,
         "max_consecutive_days": max_consecutive_days,
-        "span_days": span_days,
-        "self_sufficient_pct_in_span": self_sufficient_pct_in_span,
         "battery_kwh_delivered": round(sum(d["battery_kwh_delivered"] for d in days), 1),
         "grid_export_kwh": round(sum(d["grid_export_kwh"] for d in days), 1),
     }
