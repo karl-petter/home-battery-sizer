@@ -161,7 +161,6 @@ apex_config:
       EVAL:function(val) { return val ? val.toFixed(1) + '%' : ''; }
   yaxis:
     min: 0
-    max: 100
     title:
       text: "% of consumption covered"
   xaxis:
@@ -188,6 +187,29 @@ series:
     name: "25 kWh"
   - entity: sensor.home_battery_sizer_30_kwh_energy_self_sufficiency_previous_year
     name: "30 kWh"
+```
+
+The y-axis is deliberately not pinned to 100%: yearly self-sufficiency includes the winter months where every battery scores the same, so the differences between sizes are only a few percentage points and would vanish on a full 0–100 scale.
+
+To see what each size step actually buys, add a markdown card with the marginal gains:
+
+```yaml
+type: markdown
+title: What does each extra 5 kWh buy?
+content: >-
+  | Battery | Self-sufficiency | Gain |
+
+  |---|---|---|
+
+  {% set sizes = [5, 10, 15, 20, 25, 30] %} {% for s in sizes %} {% set v =
+  states('sensor.home_battery_sizer_' ~ s ~
+  '_kwh_energy_self_sufficiency_previous_year') | float(0) %} {% set p =
+  states('sensor.home_battery_sizer_' ~ (s - 5) ~
+  '_kwh_energy_self_sufficiency_previous_year') | float(0) %} | {{ s }} kWh |
+  {{ v }}% | {{ '+' ~ ((v - p) | round(1)) ~ '%' if not loop.first else '—'
+  }} |
+
+  {% endfor %}
 ```
 
 ### Card 3 — Daily production, consumption, export & battery coverage
