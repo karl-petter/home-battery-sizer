@@ -226,7 +226,7 @@ entities:
     name: Battery 30 kWh
 ```
 
-Adjust the battery size series to match the sizes you have configured. On a sunny day with a small battery you will see high production, high export, and low battery coverage — larger batteries pull export down and battery coverage up.
+Adjust the battery size series to match the sizes you have configured. You can also add `home_battery_sizer:solar_direct_use_daily` as a series ("Consumed directly") to see how much of the production the house uses while the sun is up — production minus direct use minus a battery's bar is the surplus that battery fails to capture. On a sunny day with a small battery you will see high production, high export, and low battery coverage — larger batteries pull export down and battery coverage up.
 
 > **Note:** The visual editor will show validation warnings for the `home_battery_sizer:` entries — that is expected. Save via the YAML editor and the card will render correctly.
 
@@ -265,33 +265,6 @@ entities:
 ```
 
 Drop the `_previous_year` suffixes to follow the current year as it unfolds instead.
-
-### Card 5 — Where does the production go?
-
-Compares each day's solar production against what the house consumed directly and what it consumed via the simulated battery — the gap between production and the other two bars is the uncaptured surplus that still goes to the grid. Uses the core statistics-graph card.
-
-> **Why not stacked?** apexcharts-card cannot read external statistics (statistic IDs like `home_battery_sizer:...` have no state entity — [issue #707](https://github.com/RomRider/apexcharts-card/issues/707)), and the core card cannot stack. Grouped bars are the practical option.
-
-Replace `sensor.your_solar_production_sensor` with your solar sensor (if its statistics are in Wh, set the entity's display unit to kWh so the bars share a scale).
-
-```yaml
-type: statistics-graph
-chart_type: bar
-title: Where does the production go? (20 kWh)
-days_to_show: 21
-period: day
-stat_types:
-  - change
-entities:
-  - entity: sensor.your_solar_production_sensor
-    name: Production
-  - entity: home_battery_sizer:solar_direct_use_daily
-    name: Consumed directly
-  - entity: home_battery_sizer:battery_delivered_daily_20kwh
-    name: Consumed via battery
-```
-
-Swap in a different `battery_delivered_daily_{size}kwh` series to see how a bigger battery closes the gap to the production bar.
 
 ## How it works
 
