@@ -137,29 +137,7 @@ Adjust the list to match the battery sizes you have configured. The statistic ID
 
 > **Note:** The visual editor will show validation warnings for these entries — that is expected. Save via the YAML editor and the card will render correctly.
 
-### Card 2 — Battery size comparison (current values)
-
-Shows the previous year's energy self-sufficiency for each battery size as a list — the share of yearly consumption covered by solar + battery. The previous year is used because it is complete; early in a year the current-year values say little. No extra integrations needed.
-
-```yaml
-type: entities
-title: Energy self-sufficiency (previous year)
-entities:
-  - entity: sensor.home_battery_sizer_5_kwh_energy_self_sufficiency_previous_year
-    name: 5 kWh
-  - entity: sensor.home_battery_sizer_10_kwh_energy_self_sufficiency_previous_year
-    name: 10 kWh
-  - entity: sensor.home_battery_sizer_15_kwh_energy_self_sufficiency_previous_year
-    name: 15 kWh
-  - entity: sensor.home_battery_sizer_20_kwh_energy_self_sufficiency_previous_year
-    name: 20 kWh
-  - entity: sensor.home_battery_sizer_25_kwh_energy_self_sufficiency_previous_year
-    name: 25 kWh
-  - entity: sensor.home_battery_sizer_30_kwh_energy_self_sufficiency_previous_year
-    name: 30 kWh
-```
-
-### Card 3 — Battery size vs self-sufficiency chart
+### Card 2 — Battery size vs self-sufficiency chart
 
 Visualises the diminishing returns as battery size grows. Requires [apexcharts-card](https://github.com/RomRider/apexcharts-card) (available via HACS).
 
@@ -212,7 +190,7 @@ series:
     name: "30 kWh"
 ```
 
-### Card 4 — Daily production, consumption, export & battery coverage
+### Card 3 — Daily production, consumption, export & battery coverage
 
 Combines actual solar production and grid export alongside simulated daily house consumption and the kWh each battery would deliver. House consumption includes solar used directly — it cannot be read from a grid meter alone. No extra integrations needed.
 
@@ -251,7 +229,7 @@ Adjust the battery size series to match the sizes you have configured. On a sunn
 
 > **Note:** The visual editor will show validation warnings for the `home_battery_sizer:` entries — that is expected. Save via the YAML editor and the card will render correctly.
 
-### Card 5 — Solar year milestones
+### Card 4 — Solar year milestones
 
 Shows the previous (complete) year's sequence for one battery size: when the panels wake up, when there is first surplus to store, from when to when the house is fully grid-free, and how the year winds down. The first two dates are attributes on the date sensors (see the Calendar sensor table), displayed with core `attribute` rows — no extra integrations needed.
 
@@ -287,7 +265,7 @@ entities:
 
 Drop the `_previous_year` suffixes to follow the current year as it unfolds instead.
 
-### Card 6 — Where does the production go? (stacked)
+### Card 5 — Where does the production go? (stacked)
 
 Splits each day's solar production into what the house consumed directly and what it consumed via the simulated battery — the rest of the production bar is surplus that would still be exported (or lost to charging efficiency). The core statistics-graph card cannot stack bars, so this uses [apexcharts-card](https://github.com/RomRider/apexcharts-card).
 
